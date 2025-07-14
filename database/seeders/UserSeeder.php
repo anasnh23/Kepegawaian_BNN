@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -12,7 +11,6 @@ class UserSeeder extends Seeder
     public function run()
     {
         // Truncate the table to remove existing data (avoids duplicates)
-        DB::table('m_user')->truncate();
 
         // Now insert the data
         DB::table('m_user')->insert([
