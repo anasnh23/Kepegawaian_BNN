@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth; // Tambahkan ini untuk Auth::check() di route root
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PegawaiController;
 
 /*
@@ -38,4 +38,8 @@ Route::middleware(['auth'])->group(function () {
     // Welcome (jika diperlukan, bisa digabung dengan dashboard jika sama)
     Route::get('/welcome', [WelcomeController::class, 'index']);
     Route::resource('/pegawai', PegawaiController::class);
+
+    Route::get('/profil', [App\Http\Controllers\ProfilController::class, 'edit'])->name('profil.edit');
+Route::post('/profil', [App\Http\Controllers\ProfilController::class, 'update'])->name('profil.update');
+
 });
