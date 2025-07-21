@@ -1,0 +1,52 @@
+/* Warna dasar sidebar */
+.sidebar-dark-primary {
+  background-color: #001F3F !important; /* Biru Tua Resmi */
+}
+
+/* Header pemisah menu */
+.nav-header {
+  color: #FFD700 !important;       /* Emas */
+  font-weight: bold;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* Teks menu default */
+.nav-sidebar .nav-link {
+  color: #d4d7dc;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Warna ikon default */
+.nav-sidebar .nav-link i.nav-icon {
+  color: #9fa6b2;
+}
+
+/* Hover: background abu gelap elegan */
+.nav-sidebar .nav-link:hover {
+  background-color: #1a2b4c;
+  color: #ffffff;
+}
+
+/* Submenu hover */
+.nav-treeview .nav-link:hover {
+  background-color: #1a2b4c !important;
+}
+
+/* Warna menu aktif */
+.nav-sidebar .nav-link.active {
+  background-color: #FFD700 !important; /* Emas */
+  color: #1a1a1a !important;
+  font-weight: 700;
+}
+
+/* Ikon menu aktif */
+.nav-sidebar .nav-link.active i.nav-icon {
+  color: #1a1a1a !important;
+}
+
+/* Ikon sub-menu */
+.nav-treeview .nav-icon {
+  font-size: 13px;
+}
