@@ -7,7 +7,7 @@
     <!-- Tombol Tambah Pegawai -->
     <div class="d-flex justify-content-end mb-2">
         <button id="btnTambahPegawai" class="btn btn-warning text-dark font-weight-bold shadow-sm">
-            <i class="fas fa-user-plus"></i> Tambah Pegawai
+            <i class="fas fa-user-plus"></i> Tambah data
         </button>
     </div>
 

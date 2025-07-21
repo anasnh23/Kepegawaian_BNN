@@ -1,5 +1,5 @@
 <div class="modal-header bg-secondary text-white">
-    <h5 class="modal-title">Detail Data Pegawai</h5>
+    <h5 class="modal-title">Detail Pegawai</h5>
     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
