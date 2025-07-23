@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\PresensiModel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class PresensiController extends Controller
 {
@@ -26,24 +25,25 @@ class PresensiController extends Controller
         $latitude = $request->latitude;
         $longitude = $request->longitude;
 
-        // Koordinat BNN Kota Kediri
-        $kantorLatitude = -7.827925;
-        $kantorLongitude = 112.005873;
+        // Lokasi akurat kantor BNN Kota Kediri
+        $kantorLat = -7.809739;
+        $kantorLng = 111.975466;
         $radiusMax = 0.3; // km
 
-        $distance = $this->calculateDistance($latitude, $longitude, $kantorLatitude, $kantorLongitude);
+        // Hitung jarak
+        $distance = $this->calculateDistance($latitude, $longitude, $kantorLat, $kantorLng);
         if ($distance > $radiusMax) {
             return back()->with('error', 'Anda berada di luar area kantor. Presensi dibatalkan.');
         }
 
-        // Simpan gambar ke folder (opsional)
+        // Simpan foto
         $imageData = $request->image_data;
         $image = str_replace('data:image/jpeg;base64,', '', $imageData);
         $image = str_replace(' ', '+', $image);
         $imageName = 'presensi_' . Auth::id() . '_' . now()->format('Ymd_His') . '.jpg';
         Storage::disk('public')->put("presensi/{$imageName}", base64_decode($image));
 
-        // Cek apakah sudah presensi masuk hari ini
+        // Cek presensi hari ini
         $existing = PresensiModel::where('id_user', Auth::id())
                     ->whereDate('tanggal', now()->format('Y-m-d'))
                     ->first();
@@ -74,6 +74,6 @@ class PresensiController extends Controller
         $dist = acos($dist);
         $dist = rad2deg($dist);
         $miles = $dist * 60 * 1.1515;
-        return $miles * 1.609344; // convert to kilometers
+        return $miles * 1.609344;
     }
 }
