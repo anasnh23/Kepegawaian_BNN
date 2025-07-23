@@ -50,3 +50,22 @@
 .nav-treeview .nav-icon {
   font-size: 13px;
 }
+
+
+.form-control, .form-control-file {
+  border-radius: 0.4rem;
+}
+
+.card-header {
+  border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.btn-success {
+  border-radius: 0.3rem;
+  font-weight: 500;
+}
+
+img.rounded-circle {
+  border: 4px solid #fff;
+}
+
