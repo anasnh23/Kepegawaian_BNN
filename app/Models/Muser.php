@@ -35,4 +35,10 @@ class MUser extends Authenticatable
     {
         return $this->hasOne(PendidikanModel::class, 'id_user', 'id_user');
     }
+
+    public function presensi()
+{
+    return $this->hasMany(PresensiModel::class, 'id_user', 'id_user');
+}
+
 }

@@ -9,13 +9,22 @@
         <p>Dashboard</p>
       </a>
     </li>
+            {{-- Tambahan: Submenu Presensi Pegawai --}}
+@if(Auth::user()->id_level == 2) {{-- misalnya 2 adalah ID level untuk 'pegawai' --}}
+  <li class="nav-item">
+    <a href="{{ url('/presensi') }}" class="nav-link {{ ($activeMenu == 'presensi') ? 'active' : '' }}">
+      <i class="fas fa-fingerprint nav-icon text-success"></i>
+      <p>Presensi Pegawai</p>
+    </a>
+  </li>
+@endif
 
     <!-- Header -->
     <li class="nav-header text-warning">SISTEM KEPEGAWAIAN</li>
 
     <!-- Menu Induk Kepegawaian -->
-    <li class="nav-item {{ in_array($activeMenu, ['pegawai', 'jabatan', 'riwayat-jabatan', 'pangkat', 'golongan', 'kgp', 'riwayat-gaji', 'pendidikan', 'laporan-gaji']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai', 'jabatan', 'riwayat-jabatan', 'pangkat', 'golongan', 'kgp', 'riwayat-gaji', 'pendidikan', 'laporan-gaji']) ? 'active' : '' }}">
+    <li class="nav-item {{ in_array($activeMenu, ['pegawai', 'jabatan', 'riwayat-jabatan', 'pangkat', 'golongan', 'kgp', 'riwayat-gaji', 'pendidikan', 'laporan-gaji', 'presensi']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai', 'jabatan', 'riwayat-jabatan', 'pangkat', 'golongan', 'kgp', 'riwayat-gaji', 'pendidikan', 'laporan-gaji', 'presensi']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
         <p>
           Kepegawaian
@@ -45,7 +54,7 @@
         </li>
         <li class="nav-item">
           <a href="{{ url('/pangkat') }}" class="nav-link {{ ($activeMenu == 'pangkat') ? 'active' : '' }}">
-            <i class="fas fa-signal nav-icon"></i>
+            <i class="nav-icon fas fa-signal"></i>
             <p>Pangkat</p>
           </a>
         </li>
@@ -81,7 +90,6 @@
         </li>
       </ul>
     </li>
-
   </ul>
 </nav>
-</aside>
+  </aside>
