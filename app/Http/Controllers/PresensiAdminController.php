@@ -10,7 +10,12 @@ class PresensiAdminController extends Controller
     public function index()
     {
         $data = PresensiModel::with('user')->latest()->get();
-        $activeMenu = 'presensi-admin';
-        return view('presensi.admin', compact('data', 'activeMenu'));
+
+        $breadcrumb = (object)[
+            'title' => 'Data Presensi',
+            'list' => ['Dashboard', 'Kepegawaian', 'Data Presensi']
+        ];
+
+        return view('presensi.admin', compact('data', 'breadcrumb'))->with('activeMenu', 'presensi-admin');
     }
 }
