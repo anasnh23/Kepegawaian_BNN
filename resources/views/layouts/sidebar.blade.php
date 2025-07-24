@@ -40,12 +40,13 @@
             <p>Data Pegawai</p>
           </a>
         </li>
-        <li class="nav-item">
-          <a href="{{ url('/presensi-admin') }}" class="nav-link {{ ($activeMenu == 'presensi-admin') ? 'active' : '' }}">
-            <i class="fas fa-fingerprint nav-icon"></i>
-            <p>Data Presensi</p>
-          </a>
-        </li>
+<li class="nav-item">
+  <a href="{{ url('/presensi-admin') }}" class="nav-link {{ ($activeMenu == 'presensi-admin') ? 'active' : '' }}">
+    <i class="fas fa-fingerprint nav-icon"></i>
+    <p>Data Presensi</p>
+  </a>
+</li>
+
         <li class="nav-item">
           <a href="{{ url('/jabatan') }}" class="nav-link {{ ($activeMenu == 'jabatan') ? 'active' : '' }}">
             <i class="fas fa-briefcase nav-icon"></i>
