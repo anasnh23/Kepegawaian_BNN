@@ -3,26 +3,26 @@
 
 @section('content')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>#map { height: 300px; }</style>
+<style>
+    #map { height: 300px; }
+</style>
 
 <div class="container-fluid">
     <h4 class="mb-3">Presensi Pegawai</h4>
 
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <div id="result" style="display:none;" class="alert mt-2"></div>
 
     <div class="row">
+        <!-- Kamera -->
         <div class="col-md-6">
             <video id="video" width="100%" height="300" autoplay></video>
             <canvas id="canvas" style="display:none;"></canvas>
         </div>
+
+        <!-- Map & Form -->
         <div class="col-md-6">
             <div id="map" class="mb-3"></div>
-            <form method="POST" action="{{ route('presensi.store') }}" onsubmit="return validateLocation()" enctype="multipart/form-data">
+            <form id="formPresensi" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="latitude" id="latitude">
                 <input type="hidden" name="longitude" id="longitude">
@@ -37,19 +37,28 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const imageData = document.getElementById('image_data');
+    const statusLokasi = document.getElementById('status-lokasi');
+    const result = document.getElementById('result');
+    const formPresensi = document.getElementById('formPresensi');
+    const btnPresensi = document.getElementById('btnPresensi');
 
+    // Konfigurasi lokasi kantor
+    const kantorLat = -7.809739;
+    const kantorLng = 111.975466;
+    const maxRadius = 0.2; // km
+
+    // Tampilkan kamera
     navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => video.srcObject = stream)
         .catch(err => alert('Tidak dapat mengakses kamera: ' + err));
 
-    const kantorLat = -7.809739;
-    const kantorLng = 111.975466;
-    const maxRadius = 0.2;
-
+    // Fungsi hitung jarak
     function getDistance(lat1, lon1, lat2, lon2) {
         const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -60,23 +69,24 @@
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    // Inisialisasi map
     const map = L.map('map').setView([kantorLat, kantorLng], 18);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // Marker kantor
     L.marker([kantorLat, kantorLng]).addTo(map).bindPopup("Kantor BNN Kota Kediri").openPopup();
     L.circle([kantorLat, kantorLng], {
-        color: 'green',
-        fillColor: '#aaf0d1',
-        fillOpacity: 0.3,
-        radius: maxRadius * 1000
+        color: 'green', fillColor: '#aaf0d1', fillOpacity: 0.3, radius: maxRadius * 1000
     }).addTo(map);
 
+    // Dapatkan lokasi pengguna
     navigator.geolocation.getCurrentPosition(pos => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+
         document.getElementById('latitude').value = lat;
         document.getElementById('longitude').value = lng;
 
@@ -88,27 +98,60 @@
         }).addTo(map).bindPopup("Lokasi Anda").openPopup();
 
         const distance = getDistance(lat, lng, kantorLat, kantorLng);
-        const status = document.getElementById('status-lokasi');
 
         if (distance <= maxRadius) {
-            status.innerHTML = `<span class="text-success">✅ Dalam Area Kantor (${(distance * 1000).toFixed(1)} m)</span>`;
-            document.getElementById('btnPresensi').disabled = false;
+            statusLokasi.innerHTML = `<span class="text-success">✅ Dalam Area Kantor (${(distance * 1000).toFixed(1)} m)</span>`;
+            btnPresensi.disabled = false;
         } else {
-            status.innerHTML = `<span class="text-danger">❌ Di luar area kantor (${(distance * 1000).toFixed(1)} m)</span>`;
-            document.getElementById('btnPresensi').disabled = true;
+            statusLokasi.innerHTML = `<span class="text-danger">❌ Di luar area kantor (${(distance * 1000).toFixed(1)} m)</span>`;
+            btnPresensi.disabled = true;
         }
 
     }, err => {
-        document.getElementById('status-lokasi').innerHTML = '<span class="text-danger">❌ Gagal mendapatkan lokasi</span>';
+        statusLokasi.innerHTML = '<span class="text-danger">❌ Gagal mendapatkan lokasi</span>';
     });
 
-    function validateLocation() {
+    // Submit via AJAX
+    formPresensi.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const lat = document.getElementById('latitude').value;
+        const lng = document.getElementById('longitude').value;
+
         const context = canvas.getContext('2d');
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         imageData.value = canvas.toDataURL('image/jpeg');
-        return true;
+
+        const data = new FormData();
+        data.append('latitude', lat);
+        data.append('longitude', lng);
+        data.append('image_data', imageData.value);
+        data.append('_token', '{{ csrf_token() }}');
+
+        btnPresensi.disabled = true;
+        btnPresensi.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+
+        axios.post('{{ route("presensi.store") }}', data)
+            .then(res => {
+                showAlert(res.data.message, 'success');
+            })
+            .catch(err => {
+                const msg = err.response?.data?.message || 'Presensi gagal.';
+                showAlert(msg, 'danger');
+            })
+            .finally(() => {
+                btnPresensi.disabled = false;
+                btnPresensi.innerHTML = `<i class="fas fa-check-circle"></i> Presensi Sekarang`;
+            });
+    });
+
+    function showAlert(message, type) {
+        result.className = `alert alert-${type}`;
+        result.innerText = message;
+        result.style.display = 'block';
+        setTimeout(() => { result.style.display = 'none'; }, 5000);
     }
 </script>
 @endsection
