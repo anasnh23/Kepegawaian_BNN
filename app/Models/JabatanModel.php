@@ -9,7 +9,7 @@ class JabatanModel extends Model
     protected $table = 'jabatan';
     protected $primaryKey = 'id_jabatan';
     public $timestamps = false;
-
+    
     protected $fillable = [
         'id_user',
         'id_ref_jabatan',
@@ -19,6 +19,10 @@ class JabatanModel extends Model
 
     public function jabatan()
     {
-        return $this->belongsTo(RefJabatanModel::class, 'id_ref_jabatan', 'id_ref_jabatan');
+        return $this->belongsTo(RefJabatanModel::class, 'id_ref_jabatan');
+    }
+    public function user()
+    {
+        return $this->belongsTo(MuserModel::class, 'id_user');
     }
 }
