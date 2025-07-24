@@ -7,7 +7,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\PangkatController;
 use App\Http\Controllers\PegawaiController;
-use App\Http\Controllers\PresensiController; // ✅ Tambahkan ini
+use App\Http\Controllers\PresensiController; 
+use App\Http\Controllers\PresensiAdminController;
+
 
 Route::get('/', function () {
     return Auth::check() ? redirect('/dashboard') : redirect('/login');
@@ -34,4 +36,8 @@ Route::middleware(['auth'])->group(function () {
     // ✅ ROUTE PRESENSI
     Route::get('/presensi', [PresensiController::class, 'index'])->name('presensi.index');
     Route::post('/presensi', [PresensiController::class, 'store'])->name('presensi.store');
+
+    // Admin - Data Presensi
+    Route::get('/presensi-admin', [PresensiAdminController::class, 'index'])->name('presensi.admin');
+
 });
