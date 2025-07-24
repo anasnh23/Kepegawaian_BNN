@@ -2,15 +2,31 @@
 <nav class="mt-2">
   <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
-    <!-- Dashboard untuk semua -->
-    <li class="nav-item">
-      <a href="{{ url('/') }}" class="nav-link {{ ($activeMenu == 'dashboard') ? 'active' : '' }}">
-        <i class="nav-icon fas fa-tachometer-alt"></i>
-        <p>Dashboard</p>
-      </a>
-    </li>
+<!-- Dashboard Admin -->
+@if(Auth::user()->id_level == 1)
+<li class="nav-item">
+  <a href="{{ url('/dashboard-admin') }}" class="nav-link {{ ($activeMenu == 'dashboard') ? 'active' : '' }}">
+    <i class="nav-icon fas fa-tachometer-alt"></i>
+    <p>Dashboard</p>
+  </a>
+</li>
+@endif
 
-    <!-- Presensi khusus Pegawai -->
+<!-- Dashboard Pegawai -->
+@if(Auth::user()->id_level == 2)
+<li class="nav-item">
+  <a href="{{ url('/dashboard-pegawai') }}" class="nav-link {{ ($activeMenu == 'dashboard') ? 'active' : '' }}">
+    <i class="nav-icon fas fa-tachometer-alt"></i>
+    <p>Dashboard</p>
+  </a>
+</li>
+@endif
+
+
+    <!-- Header SISTEM KEPEGAWAIAN (diletakkan di atas) -->
+    <li class="nav-header text-warning">SISTEM KEPEGAWAIAN</li>
+
+    <!-- Menu Pegawai -->
     @if(Auth::user()->id_level == 2)
     <li class="nav-item">
       <a href="{{ url('/presensi') }}" class="nav-link {{ ($activeMenu == 'presensi') ? 'active' : '' }}">
@@ -18,15 +34,53 @@
         <p>Presensi Pegawai</p>
       </a>
     </li>
+<li class="nav-item">
+  <a href="{{ url('/cutipegawai') }}" class="nav-link {{ ($activeMenu == 'cuti') ? 'active' : '' }}">
+    <i class="fas fa-calendar-check nav-icon text-primary"></i>
+    <p>Pengajuan Cuti</p>
+  </a>
+</li>
+<li class="nav-item">
+  <a href="{{ url('/riwayat-cuti') }}" class="nav-link {{ ($activeMenu == 'riwayat-cuti') ? 'active' : '' }}">
+    <i class="fas fa-history nav-icon text-info"></i>
+    <p>Riwayat Cuti</p>
+  </a>
+</li>
+    <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'active' : '' }}">
+        <i class="nav-icon fas fa-user-shield"></i>
+        <p>
+          Manajemen Kepegawaian
+          <i class="right fas fa-angle-left"></i>
+        </p>
+      </a>
+      <ul class="nav nav-treeview">
+        <li class="nav-item">
+          <a href="{{ url('/laporan-gaji') }}" class="nav-link {{ ($activeMenu == 'laporan-gaji') ? 'active' : '' }}">
+            <i class="fas fa-file-invoice-dollar nav-icon"></i>
+            <p>Laporan Gaji</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url('/riwayat-gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat-gaji') ? 'active' : '' }}">
+            <i class="fas fa-money-bill nav-icon"></i>
+            <p>Riwayat Gaji</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="{{ url('/riwayat-jabatan') }}" class="nav-link {{ ($activeMenu == 'riwayat-jabatan') ? 'active' : '' }}">
+            <i class="fas fa-briefcase nav-icon"></i>
+            <p>Riwayat Jabatan</p>
+          </a>
+        </li>
+      </ul>
+    </li>
     @endif
 
-    <!-- Header -->
-    <li class="nav-header text-warning">SISTEM KEPEGAWAIAN</li>
-
-    <!-- Menu untuk Admin -->
+    <!-- Menu Admin -->
     @if(Auth::user()->id_level == 1)
-    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'active' : '' }}">
+    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji','cuti']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji','cuti']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
         <p>
           Manajemen Kepegawaian
@@ -40,13 +94,12 @@
             <p>Data Pegawai</p>
           </a>
         </li>
-<li class="nav-item">
-  <a href="{{ url('/presensi-admin') }}" class="nav-link {{ ($activeMenu == 'presensi-admin') ? 'active' : '' }}">
-    <i class="fas fa-fingerprint nav-icon"></i>
-    <p>Data Presensi</p>
-  </a>
-</li>
-
+        <li class="nav-item">
+          <a href="{{ url('/presensi-admin') }}" class="nav-link {{ ($activeMenu == 'presensi-admin') ? 'active' : '' }}">
+            <i class="fas fa-fingerprint nav-icon"></i>
+            <p>Data Presensi</p>
+          </a>
+        </li>
         <li class="nav-item">
           <a href="{{ url('/jabatan') }}" class="nav-link {{ ($activeMenu == 'jabatan') ? 'active' : '' }}">
             <i class="fas fa-briefcase nav-icon"></i>
@@ -95,37 +148,10 @@
             <p>Laporan Gaji</p>
           </a>
         </li>
-      </ul>
-    </li>
-    @endif
-
-    <!-- Menu untuk Pegawai -->
-    @if(Auth::user()->id_level == 2)
-    <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'active' : '' }}">
-        <i class="nav-icon fas fa-user-shield"></i>
-        <p>
-          Manajemen Kepegawaian
-          <i class="right fas fa-angle-left"></i>
-        </p>
-      </a>
-      <ul class="nav nav-treeview">
         <li class="nav-item">
-          <a href="{{ url('/laporan-gaji') }}" class="nav-link {{ ($activeMenu == 'laporan-gaji') ? 'active' : '' }}">
-            <i class="fas fa-file-invoice-dollar nav-icon"></i>
-            <p>Laporan Gaji</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url('/riwayat-gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat-gaji') ? 'active' : '' }}">
-            <i class="fas fa-money-bill nav-icon"></i>
-            <p>Riwayat Gaji</p>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url('/riwayat-jabatan') }}" class="nav-link {{ ($activeMenu == 'riwayat-jabatan') ? 'active' : '' }}">
-            <i class="fas fa-briefcase nav-icon"></i>
-            <p>Riwayat Jabatan</p>
+          <a href="{{ url('/cutiadmin') }}" class="nav-link {{ ($activeMenu == 'cuti') ? 'active' : '' }}">
+            <i class="fas fa-calendar-alt nav-icon text-danger"></i>
+            <p>Manajemen Cuti</p>
           </a>
         </li>
       </ul>
@@ -134,4 +160,5 @@
 
   </ul>
 </nav>
+<!-- End Sidebar -->
 </aside>

@@ -41,4 +41,17 @@ class MUser extends Authenticatable
     return $this->hasMany(PresensiModel::class, 'id_user', 'id_user');
 }
 
+// Cuti yang diajukan oleh pegawai
+public function cuti()
+{
+    return $this->hasMany(Cuti::class, 'id_user');
+}
+
+// Cuti yang disetujui oleh user (jika user adalah admin/pimpinan)
+public function approvedCuti()
+{
+    return $this->hasMany(Cuti::class, 'approved_by');
+}
+
+
 }

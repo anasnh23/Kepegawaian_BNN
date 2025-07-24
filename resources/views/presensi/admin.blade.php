@@ -4,30 +4,15 @@
 @section('content')
 <div class="container-fluid">
 
-    {{-- Breadcrumb --}}
-    @if(isset($breadcrumb))
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb bg-transparent px-0 mb-2">
-            @foreach($breadcrumb->list as $key => $label)
-                @if($key == count($breadcrumb->list) - 1)
-                    <li class="breadcrumb-item active" aria-current="page">{{ $label }}</li>
-                @else
-                    <li class="breadcrumb-item">{{ $label }}</li>
-                @endif
-            @endforeach
-        </ol>
-    </nav>
-    @endif
 
-    <h4 class="mb-3">{{ $breadcrumb->title ?? 'Data Presensi Pegawai' }}</h4>
 
-    <div class="card">
+    <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
-            <strong>Data Presensi</strong>
+            <h5 class="mb-0">Data Presensi</h5>
         </div>
-        <div class="card-body table-responsive">
-            <table class="table table-bordered table-striped table-hover" id="datatable">
-                <thead class="thead-dark">
+       <div class="card-body table-responsive p-0">
+            <table class="table table-bordered table-hover text-sm m-0">
+                <thead class="thead-dark text-center">
                     <tr>
                         <th>No</th>
                         <th>Nama</th>
