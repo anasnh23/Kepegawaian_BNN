@@ -53,5 +53,21 @@ public function approvedCuti()
     return $this->hasMany(Cuti::class, 'approved_by');
 }
 
+// Relasi ke JabatanModel
+public function jabatan()
+{
+    return $this->hasOne(JabatanModel::class, 'id_user');
+}
+
+public function pangkat()
+{
+    return $this->hasOne(Pangkat::class, 'id_user');
+}
+
+public function kgp()
+{
+    return $this->hasOne(Kgp::class, 'id_user', 'id_user');
+}
+
 
 }

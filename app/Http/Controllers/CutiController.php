@@ -36,52 +36,74 @@ public function index()
 
 public function store(Request $request)
 {
-    $request->validate([
-        'jenis_cuti' => 'required',
-        'tanggal_mulai' => 'required|date',
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-    ]);
+$request->validate([
+  'jenis_cuti' => 'required|in:Tahunan,Sakit,Melahirkan,Penting,Besar,Bersama,Luar Tanggungan Negara',
+  'tanggal_mulai' => 'required|date',
+  'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+]);
+
 
     $user = Auth::user();
     $lama_kerja = Carbon::parse($user->tanggal_masuk)->diffInYears(now());
-
-    if ($request->jenis_cuti == 'Tahunan' && $lama_kerja < 1) {
-        return response()->json(['message' => 'Anda belum memenuhi syarat pengajuan cuti tahunan (minimal 1 tahun kerja).'], 422);
-    }
-
-    $lama_cuti = Carbon::parse($request->tanggal_mulai)->diffInDays(Carbon::parse($request->tanggal_selesai)) + 1;
+    $jenis = $request->jenis_cuti;
+    $mulai = Carbon::parse($request->tanggal_mulai);
+    $selesai = Carbon::parse($request->tanggal_selesai);
+    $lama_cuti = $mulai->diffInDays($selesai) + 1;
 
     if ($lama_cuti < 1) {
         return response()->json(['message' => 'Minimal cuti adalah 1 hari kerja.'], 422);
     }
 
-    $hakCuti = $this->hitungHakCutiTahunan($user);
-
-    $cuti_terpakai = Cuti::where('id_user', $user->id_user)
-        ->where('jenis_cuti', 'Tahunan')
-        ->where('status', 'Disetujui')
-        ->whereYear('tanggal_mulai', now()->year)
-        ->sum(DB::raw('DATEDIFF(tanggal_selesai, tanggal_mulai) + 1'));
-
-    if ($request->jenis_cuti == 'Tahunan' && ($cuti_terpakai + $lama_cuti > $hakCuti)) {
-        return response()->json([
-            'message' => "Pengajuan melebihi kuota cuti. Hak tersedia: {$hakCuti} hari, sudah digunakan: {$cuti_terpakai} hari."
-        ], 422);
+    // Validasi khusus
+    if ($jenis == 'Cuti Tahunan' && $lama_kerja < 1) {
+        return response()->json(['message' => 'Minimal 1 tahun kerja untuk mengajukan Cuti Tahunan.'], 422);
     }
 
+    if ($jenis == 'Cuti Besar' && $lama_kerja < 5) {
+        return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti Besar.'], 422);
+    }
+
+    if ($jenis == 'Cuti Besar' && $lama_cuti > 90) {
+        return response()->json(['message' => 'Durasi maksimal Cuti Besar adalah 3 bulan.'], 422);
+    }
+
+    if ($jenis == 'Cuti Karena Alasan Penting' && $lama_cuti > 30) {
+        return response()->json(['message' => 'Durasi maksimal Cuti Alasan Penting adalah 1 bulan.'], 422);
+    }
+
+    if ($jenis == 'Cuti di Luar Tanggungan Negara' && $lama_kerja < 5) {
+        return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti di Luar Tanggungan Negara.'], 422);
+    }
+
+    // Validasi jatah cuti tahunan
+    if ($jenis == 'Cuti Tahunan') {
+        $hakCuti = $this->hitungHakCutiTahunan($user);
+        $terpakai = Cuti::where('id_user', $user->id_user)
+            ->where('jenis_cuti', 'Cuti Tahunan')
+            ->where('status', 'Disetujui')
+            ->whereYear('tanggal_mulai', now()->year)
+            ->sum(DB::raw('DATEDIFF(tanggal_selesai, tanggal_mulai) + 1'));
+
+        if (($terpakai + $lama_cuti) > $hakCuti) {
+            return response()->json(['message' => "Hak cuti tahunan hanya $hakCuti hari. Sudah digunakan: $terpakai hari."], 422);
+        }
+    }
+
+    // Simpan data cuti
     Cuti::create([
         'id_user' => $user->id_user,
-        'jenis_cuti' => $request->jenis_cuti,
+        'jenis_cuti' => $jenis,
         'tanggal_pengajuan' => now(),
-        'tanggal_mulai' => $request->tanggal_mulai,
-        'tanggal_selesai' => $request->tanggal_selesai,
+        'tanggal_mulai' => $mulai,
+        'tanggal_selesai' => $selesai,
         'lama_cuti' => $lama_cuti,
         'keterangan' => $request->keterangan,
-        'status' => 'Menunggu'
+        'status' => 'Menunggu',
     ]);
 
     return response()->json(['message' => 'Pengajuan cuti berhasil dikirim.']);
 }
+
 
 
     private function hitungHakCutiTahunan($user)

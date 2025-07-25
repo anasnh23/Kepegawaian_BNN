@@ -148,6 +148,20 @@
                                     <input type="password" name="password_confirmation" class="form-control">
                                 </div>
                             </div>
+                        <h6 class="mt-4 section-title">Posisi dan Pangkat</h6>
+<div class="form-row">
+    <div class="form-group col-md-6">
+        <label class="form-label">Jabatan</label>
+        <input type="text" class="form-control" 
+               value="{{ $user->jabatan->refJabatan->nama_jabatan ?? '-' }}" readonly>
+    </div>
+    <div class="form-group col-md-6">
+        <label class="form-label">Pangkat</label>
+        <input type="text" class="form-control" 
+               value="{{ $user->pangkat->refGolongan->golongan_pangkat ?? '-' }}" readonly>
+    </div>
+</div>
+
 
                             <div class="text-right">
                                 <button type="submit" class="btn btn-primary px-4 mt-3">

@@ -1,5 +1,5 @@
 <div class="modal-header bg-primary text-white">
-    <h5 class="modal-title">Tambah Data</h5>
+    <h5 class="modal-title">Tambah Data Pegawai</h5>
     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
@@ -62,6 +62,36 @@
                         <option value="{{ $level->id_level }}">{{ $level->level_name }}</option>
                     @endforeach
                 </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="id_ref_jabatan">Jabatan</label>
+                <select name="id_ref_jabatan" class="form-control">
+                    <option value="">-- Pilih Jabatan --</option>
+                    @foreach ($jabatans as $jabatan)
+                        <option value="{{ $jabatan->id_ref_jabatan }}">{{ $jabatan->nama_jabatan }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="tmt_jabatan">TMT Jabatan</label>
+                <input type="date" name="tmt_jabatan" class="form-control">
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="id_ref_pangkat">Pangkat</label>
+                <select name="id_ref_pangkat" class="form-control">
+                    <option value="">-- Pilih Pangkat --</option>
+                    @foreach ($pangkats as $pangkat)
+                        <option value="{{ $pangkat->id_ref_pangkat }}">{{ $pangkat->golongan_pangkat }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="form-group col-md-6">
+                <label for="tmt_pangkat">TMT Pangkat</label>
+                <input type="date" name="tmt_pangkat" class="form-control">
             </div>
 
             <div class="form-group col-md-6">

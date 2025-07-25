@@ -11,13 +11,43 @@
         </button>
     </div>
 
-    <!-- Tabel Pegawai -->
-    <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Data Pegawai</h5>
+<!-- Tabel Pegawai -->
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Data Pegawai</h5>
+    </div>
+
+    <div class="card-body">
+        <!-- FILTER BAR -->
+        <div class="row mb-3">
+            <div class="col-md-4 mb-2">
+                <input type="text" id="filterNama" class="form-control form-control-sm shadow-sm" placeholder="Cari Nama atau NIP">
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="filterLevel" class="form-control form-control-sm shadow-sm">
+                    <option value="">-- Semua Level --</option>
+                    @foreach ($levels as $level)
+                        <option value="{{ $level->level_name }}">{{ $level->level_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3 mb-2">
+                <select id="filterJabatan" class="form-control form-control-sm shadow-sm">
+                    <option value="">-- Semua Jabatan --</option>
+                    @foreach ($jabatans as $j)
+                        <option value="{{ $j->nama_jabatan }}">{{ $j->nama_jabatan }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-2 mb-2 text-right">
+                <button id="btnResetFilter" class="btn btn-sm btn-outline-secondary w-100 shadow-sm">
+                    <i class="fas fa-sync-alt"></i> Reset
+                </button>
+            </div>
         </div>
 
-        <div class="card-body table-responsive p-0">
+        <!-- TABEL -->
+        <div class="table-responsive">
             <table class="table table-bordered table-hover text-sm m-0">
                 <thead class="thead-dark text-center">
                     <tr>
@@ -30,6 +60,8 @@
                         <th>No. HP</th>
                         <th>Level</th>
                         <th>Pendidikan</th>
+                        <th>Jabatan</th>
+                        <th>Pangkat</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
@@ -47,6 +79,8 @@
                         <td>{{ $data->no_tlp }}</td>
                         <td>{{ $data->level->level_name ?? '-' }}</td>
                         <td>{{ $data->pendidikan->jenis_pendidikan ?? '-' }}</td>
+                        <td>{{ $data->jabatan->refJabatan->nama_jabatan ?? '-' }}</td>
+                        <td>{{ $data->pangkat->refPangkat->golongan_pangkat ?? '-' }}</td>
                         <td class="text-center">
                             <button class="btn btn-sm btn-info btnViewPegawai" data-id="{{ $data->id_user }}"><i class="fas fa-eye"></i></button>
                             <button class="btn btn-sm btn-warning btnEditPegawai" data-id="{{ $data->id_user }}"><i class="fas fa-pencil-alt"></i></button>
@@ -54,13 +88,14 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="10" class="text-center text-muted">Belum ada data pegawai.</td></tr>
+                    <tr><td colspan="12" class="text-center text-muted">Belum ada data pegawai.</td></tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
     </div>
 </div>
+
 
 <!-- Modal Tambah / Edit / View Pegawai -->
 <div class="modal fade" id="modalFormPegawai" tabindex="-1" aria-labelledby="modalPegawaiLabel" aria-hidden="true">
@@ -70,6 +105,8 @@
     </div>
   </div>
 </div>
+
+
 @endsection
 
 @push('scripts')
@@ -187,6 +224,34 @@ $(document).ready(function () {
             }
         });
     });
+// === FILTER PROFESIONAL ===
+$('#filterNama, #filterLevel, #filterJabatan').on('input change', function () {
+    let nama = $('#filterNama').val().toLowerCase();
+    let level = $('#filterLevel').val().toLowerCase();
+    let jabatan = $('#filterJabatan').val().toLowerCase();
+
+    $('#tabelPegawai tr').each(function () {
+        let row = $(this);
+        let textNama = row.find('td:eq(3)').text().toLowerCase();
+        let textNIP = row.find('td:eq(2)').text().toLowerCase();
+        let textLevel = row.find('td:eq(7)').text().toLowerCase();
+        let textJabatan = row.find('td:eq(9)').text().toLowerCase();
+
+        let matchNama = nama === '' || textNama.includes(nama) || textNIP.includes(nama);
+        let matchLevel = level === '' || textLevel.includes(level);
+        let matchJabatan = jabatan === '' || textJabatan.includes(jabatan);
+
+        row.toggle(matchNama && matchLevel && matchJabatan);
+    });
+});
+
+$('#btnResetFilter').click(function () {
+    $('#filterNama').val('');
+    $('#filterLevel').val('');
+    $('#filterJabatan').val('');
+    $('#filterNama').trigger('input'); // Trigger ulang filter
+});
+
 
 });
 </script>

@@ -11,13 +11,17 @@
           <div class="row">
             <div class="col-md-6">
               <label for="jenis_cuti">Jenis Cuti</label>
-              <select class="form-control" name="jenis_cuti" required>
-                <option value="Tahunan">Cuti Tahunan</option>
-                <option value="Sakit">Cuti Sakit</option>
-                <option value="Melahirkan">Cuti Melahirkan</option>
-                <option value="Penting">Cuti Alasan Penting</option>
-                <option value="Lainnya">Lainnya</option>
-              </select>
+<select class="form-control" name="jenis_cuti" required>
+  <option value="Tahunan">Cuti Tahunan</option>
+  <option value="Sakit">Cuti Sakit</option>
+  <option value="Melahirkan">Cuti Melahirkan</option>
+  <option value="Penting">Cuti Karena Alasan Penting</option>
+  <option value="Besar">Cuti Besar</option>
+  <option value="Bersama">Cuti Bersama</option>
+  <option value="Luar Tanggungan Negara">Cuti di Luar Tanggungan Negara</option>
+</select>
+
+
             </div>
             <div class="col-md-6">
               <label for="tanggal_pengajuan">Tanggal Pengajuan</label>

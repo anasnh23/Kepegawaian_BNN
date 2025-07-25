@@ -82,6 +82,43 @@
                 <input type="number" name="tahun_kelulusan" class="form-control" min="1970" max="{{ date('Y') }}"
                        value="{{ optional($pegawai->pendidikan)->tahun_kelulusan }}">
             </div>
+            <div class="form-group col-md-6">
+    <label for="id_ref_jabatan">Jabatan</label>
+    <select name="id_ref_jabatan" class="form-control">
+        <option value="">-- Pilih Jabatan --</option>
+        @foreach ($jabatans as $jabatan)
+            <option value="{{ $jabatan->id_ref_jabatan }}"
+                {{ optional($pegawai->jabatan)->id_ref_jabatan == $jabatan->id_ref_jabatan ? 'selected' : '' }}>
+                {{ $jabatan->nama_jabatan }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="form-group col-md-6">
+    <label for="tmt_jabatan">TMT Jabatan</label>
+    <input type="date" name="tmt_jabatan" class="form-control"
+        value="{{ optional($pegawai->jabatan)->tmt }}">
+</div>
+
+<div class="form-group col-md-6">
+    <label for="id_ref_pangkat">Pangkat</label>
+    <select name="id_ref_pangkat" class="form-control">
+        <option value="">-- Pilih Pangkat --</option>
+        @foreach ($pangkats as $pangkat)
+            <option value="{{ $pangkat->id_ref_pangkat }}"
+                {{ optional($pegawai->pangkat)->id_ref_pangkat == $pangkat->id_ref_pangkat ? 'selected' : '' }}>
+                {{ $pangkat->golongan_pangkat }}
+            </option>
+        @endforeach
+    </select>
+</div>
+
+<div class="form-group col-md-6">
+    <label for="tmt_pangkat">TMT Pangkat</label>
+    <input type="date" name="tmt_pangkat" class="form-control">
+</div>
+
 
             <div class="form-group col-md-6">
                 <label for="foto">Foto Baru</label>
