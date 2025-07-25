@@ -36,8 +36,6 @@
     .form-control {
         border: 1px solid #ced4da;
         border-radius: 6px;
-        box-shadow: none;
-        transition: border-color 0.3s, box-shadow 0.3s;
         background-color: #fff;
         color: #000;
     }
@@ -62,13 +60,12 @@
     }
 </style>
 
-
 <div class="container-fluid">
     <div class="card shadow-sm mb-4 card-profile">
         <div class="card-body">
             <div class="row">
 
-                <!-- FOTO -->
+                <!-- FOTO PROFIL -->
                 <div class="col-md-4 text-center position-relative">
                     <div class="p-3">
                         <div class="position-relative d-inline-block">
@@ -94,12 +91,13 @@
                     </div>
                 </div>
 
-                <!-- FORM -->
+                <!-- FORM PROFIL -->
                 <div class="col-md-8">
                     <div class="form-section">
                         <h5 class="mb-3 section-title"><i class="fas fa-user-cog mr-2 text-dark"></i> Informasi Akun</h5>
                         <form action="{{ route('profil.update') }}" method="POST" enctype="multipart/form-data">
                             @csrf
+
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label class="form-label">Nama Lengkap</label>
@@ -125,7 +123,7 @@
                                 </div>
                             </div>
 
-                           <h6 class="mt-4 section-title">Kontak</h6>
+                            <h6 class="mt-4 section-title">Kontak</h6>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label class="form-label">Email</label>
@@ -137,7 +135,7 @@
                                 </div>
                             </div>
 
-                 <h6 class="mt-4 section-title">Keamanan</h6>
+                            <h6 class="mt-4 section-title">Keamanan</h6>
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label class="form-label">Password Baru</label>
@@ -148,26 +146,27 @@
                                     <input type="password" name="password_confirmation" class="form-control">
                                 </div>
                             </div>
-                        <h6 class="mt-4 section-title">Posisi dan Pangkat</h6>
-<div class="form-row">
-    <div class="form-group col-md-6">
-        <label class="form-label">Jabatan</label>
-        <input type="text" class="form-control" 
-               value="{{ $user->jabatan->refJabatan->nama_jabatan ?? '-' }}" readonly>
-    </div>
-    <div class="form-group col-md-6">
-        <label class="form-label">Pangkat</label>
-        <input type="text" class="form-control" 
-               value="{{ $user->pangkat->refGolongan->golongan_pangkat ?? '-' }}" readonly>
-    </div>
-</div>
 
+                            <h6 class="mt-4 section-title">Posisi dan Pangkat</h6>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Jabatan</label>
+                                    <input type="text" class="form-control" 
+                                           value="{{ $user->jabatan->refJabatan->nama_jabatan ?? '-' }}" readonly>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Pangkat</label>
+                                    <input type="text" class="form-control"
+    value="{{ $user->pangkat->refPangkat->golongan_pangkat ?? '-' }}" readonly>
+                                </div>
+                            </div>
 
                             <div class="text-right">
                                 <button type="submit" class="btn btn-primary px-4 mt-3">
                                     <i class="fas fa-save mr-1"></i> Simpan Perubahan
                                 </button>
                             </div>
+
                         </form>
                     </div>
                 </div>

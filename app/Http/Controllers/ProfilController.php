@@ -13,16 +13,18 @@ class ProfilController extends Controller
     /**
      * Menampilkan form edit profil.
      */
+// ProfilController.php
 public function edit()
 {
     $user = MUser::with([
         'level',
         'jabatan.refJabatan',
-        'pangkat.refGolongan'
+        'pangkat.refPangkat' // ✅ Ini yang benar
     ])->find(Auth::id());
 
     return view('profil.edit', compact('user'));
 }
+
 
 
 
