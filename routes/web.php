@@ -16,7 +16,7 @@ use App\Http\Controllers\PimpinanCutiController;
 use App\Http\Controllers\CutiController;
 use App\Http\Controllers\AdminCutiController;
 use App\Http\Controllers\NotifikasiController;
-
+use App\Http\Controllers\RefJabatanController;
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -86,4 +86,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
     Route::post('/notifikasi/baca', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.baca'); // Tandai semua
     Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id'); // Klik per notifikasi
+
+    // jabatan
+    Route::resource('/ref_jabatan', RefJabatanController::class);
+
 });

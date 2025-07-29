@@ -132,7 +132,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ url('/jabatan') }}" class="nav-link {{ ($activeMenu == 'jabatan') ? 'active' : '' }}">
+          <a href="{{ url('/ref_jabatan') }}" class="nav-link {{ ($activeMenu == 'jabatan') ? 'active' : '' }}">
             <i class="fas fa-briefcase nav-icon"></i>
             <p>Data Jabatan</p>
           </a>
