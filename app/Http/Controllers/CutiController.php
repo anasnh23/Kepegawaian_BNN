@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\MUser;
+use App\Models\Cuti;
+use App\Models\ApprovalPimpinan;
+use App\Helpers\NotifikasiHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Models\ApprovalPimpinan; // pastikan sudah di-import
-use App\Models\Cuti;
-use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use Carbon\Carbon;
 
 class CutiController extends Controller
 {
@@ -85,7 +86,7 @@ class CutiController extends Controller
             }
         }
 
-        Cuti::create([
+        $cuti = Cuti::create([
             'id_user' => $user->id_user,
             'jenis_cuti' => $jenis,
             'tanggal_pengajuan' => now(),
@@ -96,32 +97,53 @@ class CutiController extends Controller
             'status' => 'Menunggu',
         ]);
 
+        // Kirim notifikasi ke semua admin
+        $adminList = MUser::where('id_level', 1)->get();
+        foreach ($adminList as $admin) {
+            NotifikasiHelper::send(
+                $admin->id_user,
+                'cuti',
+                'Pengajuan cuti baru dari ' . $user->nama,
+                route('cutiadmin.index')
+            );
+        }
+
         return response()->json(['message' => 'Pengajuan cuti berhasil dikirim.']);
     }
 
-public function uploadDokumen(Request $request)
+  public function uploadDokumen(Request $request)
 {
     $request->validate([
         'cuti_id' => 'required|exists:cuti,id_cuti',
         'dokumen' => 'required|file|mimes:pdf|max:2048',
     ]);
 
-    $cuti = Cuti::findOrFail($request->cuti_id);
+    $cuti = Cuti::with('pegawai')->findOrFail($request->cuti_id); // tambahkan relasi pegawai
 
     $file = $request->file('dokumen');
     $filename = time() . '_' . $file->getClientOriginalName();
     $path = $file->storeAs('dokumen_cuti', $filename, 'public');
 
-    // Cek apakah sudah pernah ada record approval_pimpinan sebelumnya
     $approval = ApprovalPimpinan::firstOrNew(['id_cuti' => $cuti->id_cuti]);
-
     $approval->dokumen_path = $path;
-    $approval->status = null; // default status
+    $approval->status = null;
     $approval->approved_by = null;
     $approval->save();
 
+    // ✅ Kirim notifikasi ke pimpinan
+    $pimpinanList = MUser::where('id_level', 3)->get();
+    foreach ($pimpinanList as $pimpinan) {
+        NotifikasiHelper::send(
+            $pimpinan->id_user,
+            'cuti',
+            'Dokumen cuti dari ' . $cuti->pegawai->nama . ' telah diunggah dan menunggu persetujuan.',
+            route('approval.dokumen')
+        );
+    }
+
     return back()->with('success', 'Dokumen cuti berhasil diupload ke pimpinan.');
 }
+
 
     private function hitungHakCutiTahunan($user)
     {
@@ -148,24 +170,44 @@ public function uploadDokumen(Request $request)
         }
     }
 
-public function riwayat()
-{
-    $user = Auth::user();
+    public function riwayat()
+    {
+        $user = Auth::user();
 
-    $cuti = Cuti::where('id_user', $user->id_user)
-                ->with(['pegawai', 'approvalPimpinan'])
-                ->orderByDesc('tanggal_pengajuan')
-                ->get();
+        $cuti = Cuti::where('id_user', $user->id_user)
+                    ->with(['pegawai', 'approvalPimpinan'])
+                    ->orderByDesc('tanggal_pengajuan')
+                    ->get();
 
-    $breadcrumb = (object)[
-        'title' => 'Riwayat Cuti',
-        'list' => ['Dashboard', 'Riwayat Cuti']
-    ];
+        $breadcrumb = (object)[
+            'title' => 'Riwayat Cuti',
+            'list' => ['Dashboard', 'Riwayat Cuti']
+        ];
 
-    return view('pegawai.riwayat-cuti', compact('cuti', 'breadcrumb'))
-        ->with('activeMenu', 'riwayat-cuti');
-}
+        return view('pegawai.riwayat-cuti', compact('cuti', 'breadcrumb'))
+            ->with('activeMenu', 'riwayat-cuti');
+    }
 
+    public function riwayatPersetujuanPimpinan()
+    {
+        $user = Auth::user();
+
+        $cuti = Cuti::where('id_user', $user->id_user)
+            ->whereHas('approvalPimpinan', function ($query) {
+                $query->whereNotNull('dokumen_path');
+            })
+            ->with('approvalPimpinan')
+            ->orderByDesc('tanggal_pengajuan')
+            ->get();
+
+        $breadcrumb = (object)[
+            'title' => 'Riwayat Cuti',
+            'list' => ['Dashboard', 'Riwayat Cuti']
+        ];
+
+        return view('pegawai.riwayat-cuti', compact('cuti', 'breadcrumb'))
+            ->with('activeMenu', 'riwayat-cuti');
+    }
 
     public function cetak($id)
     {
@@ -180,26 +222,4 @@ public function riwayat()
 
         return $pdf->stream('pengajuan_cuti_' . $cuti->id_cuti . '.pdf');
     }
-
-    public function riwayatPersetujuanPimpinan()
-{
-    $user = Auth::user();
-
-    $cuti = Cuti::where('id_user', $user->id_user)
-        ->whereHas('approvalPimpinan', function ($query) {
-            $query->whereNotNull('dokumen_path');
-        })
-        ->with('approvalPimpinan')
-        ->orderByDesc('tanggal_pengajuan')
-        ->get();
-
-    $breadcrumb = (object)[
-        'title' => 'Riwayat Cuti',
-        'list' => ['Dashboard', 'Riwayat Cuti']
-    ];
-
-    return view('pegawai.riwayat-cuti', compact('cuti', 'breadcrumb'))
-        ->with('activeMenu', 'riwayat-cuti');
-}
-
 }

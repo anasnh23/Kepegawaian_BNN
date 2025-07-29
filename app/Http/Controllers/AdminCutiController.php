@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cuti;
+use App\Helpers\NotifikasiHelper;
+use App\Models\MUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,21 +23,43 @@ class AdminCutiController extends Controller
         return view('cuti.admin', compact('cuti', 'breadcrumb'))->with('activeMenu', 'cuti');
     }
 
-    public function setStatus(Request $request)
-    {
-        $request->validate([
-            'id' => 'required|exists:cuti,id_cuti',
-            'status' => 'required|in:Disetujui,Ditolak',
-        ]);
+   public function setStatus(Request $request)
+{
+    $request->validate([
+        'id' => 'required|exists:cuti,id_cuti',
+        'status' => 'required|in:Disetujui,Ditolak,Menunggu',
+    ]);
 
-        $cuti = Cuti::findOrFail($request->id);
-        $cuti->status = $request->status;
-        $cuti->approved_by = Auth::user()->id_user;
-        $cuti->updated_at = now();
-        $cuti->save();
+    $cuti = Cuti::with('pegawai')->findOrFail($request->id);
+    $cuti->status = $request->status;
+    $cuti->approved_by = Auth::user()->id_user;
+    $cuti->updated_at = now();
+    $cuti->save();
 
-        return response()->json(['message' => 'Status cuti berhasil diperbarui.']);
+    // Kirim notifikasi ke pegawai
+    NotifikasiHelper::send(
+        $cuti->id_user,
+        'cuti',
+        'Status pengajuan cuti Anda telah ' . strtolower($cuti->status),
+        route('cuti.riwayat')
+    );
+
+    // Kirim notifikasi ke pimpinan jika status "Menunggu"
+    if ($cuti->status === 'Menunggu') {
+        $pimpinanList = MUser::where('id_level', 3)->get();
+        foreach ($pimpinanList as $pimpinan) {
+            NotifikasiHelper::send(
+                $pimpinan->id_user,
+                'cuti',
+                'Ada pengajuan cuti menunggu persetujuan dari ' . $cuti->pegawai->nama,
+                route('approval.dokumen')
+            );
+        }
     }
+
+    return response()->json(['message' => 'Status cuti berhasil diperbarui.']);
+}
+
 
     public function edit($id)
 {

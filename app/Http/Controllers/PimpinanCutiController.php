@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Cuti;
+use App\Helpers\NotifikasiHelper;
 use App\Models\ApprovalPimpinan;
 use Illuminate\Support\Facades\Auth;
 
@@ -14,7 +15,6 @@ class PimpinanCutiController extends Controller
      */
     public function index()
     {
-        // Ambil semua cuti yang memiliki dokumen dan belum diputuskan
         $cuti = Cuti::whereHas('approvalPimpinan', function ($query) {
                 $query->whereNotNull('dokumen_path')
                       ->whereNull('status');
@@ -33,7 +33,7 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Menyetujui dokumen (non-AJAX)
+     * Menyetujui dokumen cuti
      */
     public function approve($id)
     {
@@ -54,11 +54,19 @@ class PimpinanCutiController extends Controller
         $cuti->updated_at = now();
         $cuti->save();
 
+        // ✅ Kirim notifikasi ke pegawai
+        NotifikasiHelper::send(
+            $cuti->id_user,
+            'cuti',
+            'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.',
+            route('cuti.riwayat')
+        );
+
         return redirect()->back()->with('success', 'Dokumen berhasil disetujui.');
     }
 
     /**
-     * Menolak dokumen (non-AJAX)
+     * Menolak dokumen cuti
      */
     public function reject($id)
     {
@@ -79,11 +87,19 @@ class PimpinanCutiController extends Controller
         $cuti->updated_at = now();
         $cuti->save();
 
+        // ✅ Notifikasi ke pegawai (opsional)
+        NotifikasiHelper::send(
+            $cuti->id_user,
+            'cuti',
+            'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.',
+            route('cuti.riwayat')
+        );
+
         return redirect()->back()->with('success', 'Dokumen telah ditolak.');
     }
 
     /**
-     * Riwayat dokumen yang sudah disetujui/ditolak
+     * Riwayat approval dokumen cuti
      */
     public function riwayat()
     {
@@ -105,7 +121,7 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Update status via AJAX
+     * Update status approval via AJAX
      */
     public function updateStatus(Request $request)
     {
@@ -127,10 +143,20 @@ class PimpinanCutiController extends Controller
             $cuti->approved_by = Auth::user()->id_user;
             $cuti->updated_at = now();
             $cuti->save();
+
+            // ✅ Notifikasi ke pegawai
+            $pesan = $request->status === 'Disetujui'
+                ? 'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.'
+                : 'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.';
+
+            NotifikasiHelper::send(
+                $cuti->id_user,
+                'cuti',
+                $pesan,
+                route('cuti.riwayat')
+            );
         }
 
         return response()->json(['message' => 'Status berhasil diperbarui.']);
     }
-
-    
 }
