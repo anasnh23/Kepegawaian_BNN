@@ -63,7 +63,7 @@ class PresensiController extends Controller
             $presensi->foto_masuk = $imageName;
 
             // Tentukan status
-            $presensi->status = $waktu->format('H:i') > '08:00' ? 'terlambat' : 'hadir';
+            $presensi->status = $waktu->format('H:i') > '09:00' ? 'terlambat' : 'hadir';
 
             $presensi->save();
             return response()->json(['status' => 'success', 'message' => 'Presensi masuk berhasil']);

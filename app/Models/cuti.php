@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\MUser;
+use App\Models\ApprovalPimpinan;
 
 class Cuti extends Model
 {
     use HasFactory;
 
-    protected $table = 'cuti'; // nama tabel di database
-
+    protected $table = 'cuti';
     protected $primaryKey = 'id_cuti';
 
     protected $fillable = [
@@ -34,20 +34,27 @@ class Cuti extends Model
         'updated_at'
     ];
 
-    // Relasi ke tabel m_user (pegawai yang mengajukan cuti)
-// Cuti.php sekarang (salah):
+    /**
+     * Relasi ke tabel m_user (pegawai yang mengajukan cuti)
+     */
+    public function pegawai()
+    {
+        return $this->belongsTo(MUser::class, 'id_user', 'id_user');
+    }
 
-
-public function pegawai()
-{
-    return $this->belongsTo(MUser::class, 'id_user', 'id_user');
-}
-
-
-
-    // Relasi ke admin/pimpinan yang menyetujui cuti
+    /**
+     * Relasi ke admin/pimpinan yang menyetujui cuti (dari cuti.approved_by)
+     */
     public function approver()
     {
-        return $this->belongsTo(MUser::class, 'approved_by');
+        return $this->belongsTo(MUser::class, 'approved_by', 'id_user');
+    }
+
+    /**
+     * Relasi ke tabel approval_pimpinan
+     */
+    public function approvalPimpinan()
+    {
+        return $this->hasOne(ApprovalPimpinan::class, 'id_cuti', 'id_cuti');
     }
 }
