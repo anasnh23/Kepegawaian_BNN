@@ -1,5 +1,5 @@
 @extends('layouts.template')
-@section('title', 'Profil Saya')
+@section('title', 'Edit Profil')
 
 @section('content')
 <style>
@@ -33,30 +33,18 @@
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     }
 
-    .form-control {
-        border: 1px solid #ced4da;
-        border-radius: 6px;
-        background-color: #fff;
-        color: #000;
-    }
-
-    .form-control:focus {
-        border-color: #0a2647;
-        box-shadow: 0 0 0 0.15rem rgba(10, 38, 71, 0.25);
-    }
-
     .form-label {
         font-weight: 600;
         color: #000 !important;
     }
 
-    .section-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #000;
-        border-bottom: 2px solid #e0e0e0;
-        margin-top: 20px;
-        padding-bottom: 5px;
+    .btn-back {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-back:hover {
+        background-color: #5a6268;
     }
 </style>
 
@@ -64,7 +52,6 @@
     <div class="card shadow-sm mb-4 card-profile">
         <div class="card-body">
             <div class="row">
-
                 <!-- FOTO PROFIL -->
                 <div class="col-md-4 text-center position-relative">
                     <div class="p-3">
@@ -94,83 +81,92 @@
                 <!-- FORM PROFIL -->
                 <div class="col-md-8">
                     <div class="form-section">
-                        <h5 class="mb-3 section-title"><i class="fas fa-user-cog mr-2 text-dark"></i> Informasi Akun</h5>
-                        <form action="{{ route('profil.update') }}" method="POST" enctype="multipart/form-data">
-                            @csrf
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-4" id="profilTab" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="data-tab" data-toggle="tab" href="#data" role="tab"><i class="fas fa-user-edit mr-1"></i> Data Diri</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" id="keamanan-tab" data-toggle="tab" href="#keamanan" role="tab"><i class="fas fa-lock mr-1"></i> Keamanan</a>
+                            </li>
+                        </ul>
 
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Nama Lengkap</label>
-                                    <input type="text" name="nama" class="form-control" value="{{ old('nama', $user->nama) }}" required>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">NIP</label>
-                                    <input type="text" class="form-control" value="{{ $user->nip }}" readonly>
-                                </div>
+                        <div class="tab-content" id="profilTabContent">
+                            <!-- Tab Data Diri -->
+                            <div class="tab-pane fade show active" id="data" role="tabpanel">
+                                <form action="{{ route('profil.update') }}" method="POST" enctype="multipart/form-data">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label class="form-label">Nama Lengkap</label>
+                                        <input type="text" name="nama" class="form-control" value="{{ old('nama', $user->nama) }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">NIP</label>
+                                        <input type="text" class="form-control" value="{{ $user->nip }}" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Jenis Kelamin</label>
+                                        <select name="jenis_kelamin" class="form-control" required>
+                                            <option value="L" {{ $user->jenis_kelamin == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                                            <option value="P" {{ $user->jenis_kelamin == 'P' ? 'selected' : '' }}>Perempuan</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Agama</label>
+                                        <input type="text" name="agama" class="form-control" value="{{ old('agama', $user->agama) }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">No. Telepon</label>
+                                        <input type="text" name="no_tlp" class="form-control" value="{{ old('no_tlp', $user->no_tlp) }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Jabatan</label>
+                                        <input type="text" class="form-control" value="{{ $user->jabatan->refJabatan->nama_jabatan ?? '-' }}" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Pangkat</label>
+                                        <input type="text" class="form-control" value="{{ $user->pangkat->refPangkat->golongan_pangkat ?? '-' }}" readonly>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <button type="submit" class="btn btn-primary mt-2"><i class="fas fa-save mr-1"></i> Simpan Data</button>
+                                    </div>
+                                </form>
                             </div>
 
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Jenis Kelamin</label>
-                                    <select name="jenis_kelamin" class="form-control" required>
-                                        <option value="L" {{ $user->jenis_kelamin == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="P" {{ $user->jenis_kelamin == 'P' ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Agama</label>
-                                    <input type="text" name="agama" class="form-control" value="{{ old('agama', $user->agama) }}">
-                                </div>
-                            </div>
+                            <!-- Tab Keamanan -->
+                            <div class="tab-pane fade" id="keamanan" role="tabpanel">
+                                <form id="form-password">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label class="form-label">Password Lama</label>
+                                        <input type="password" name="old_password" class="form-control" placeholder="Masukkan password lama" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Password Baru</label>
+                                        <input type="password" name="password" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Konfirmasi Password Baru</label>
+                                        <input type="password" name="password_confirmation" class="form-control" required>
+                                    </div>
 
-                            <h6 class="mt-4 section-title">Kontak</h6>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Email</label>
-                                    <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">No. Telepon</label>
-                                    <input type="text" name="no_tlp" class="form-control" value="{{ old('no_tlp', $user->no_tlp) }}">
-                                </div>
+                                    <div class="text-right">
+                                        <button type="submit" class="btn btn-primary mt-2"><i class="fas fa-key mr-1"></i> Simpan Password</button>
+                                    </div>
+                                </form>
                             </div>
+                        </div>
 
-                            <h6 class="mt-4 section-title">Keamanan</h6>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Password Baru</label>
-                                    <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin ganti">
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Konfirmasi Password</label>
-                                    <input type="password" name="password_confirmation" class="form-control">
-                                </div>
-                            </div>
-
-                            <h6 class="mt-4 section-title">Posisi dan Pangkat</h6>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Jabatan</label>
-                                    <input type="text" class="form-control" 
-                                           value="{{ $user->jabatan->refJabatan->nama_jabatan ?? '-' }}" readonly>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Pangkat</label>
-                                    <input type="text" class="form-control"
-    value="{{ $user->pangkat->refPangkat->golongan_pangkat ?? '-' }}" readonly>
-                                </div>
-                            </div>
-
-                            <div class="text-right">
-                                <button type="submit" class="btn btn-primary px-4 mt-3">
-                                    <i class="fas fa-save mr-1"></i> Simpan Perubahan
-                                </button>
-                            </div>
-
-                        </form>
+                        <div class="mt-4">
+                            <a href="{{ route('profil.show') }}" class="btn btn-back"><i class="fas fa-arrow-left mr-1"></i> Kembali</a>
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -180,6 +176,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    // Upload foto dengan AJAX
     $('#foto-upload').on('change', function () {
         const formData = new FormData($('#upload-foto-form')[0]);
 
@@ -208,22 +205,42 @@
         });
     });
 
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '{{ session('success') }}',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    @endif
+    // AJAX submit untuk ubah password
+    $('#form-password').on('submit', function(e) {
+        e.preventDefault();
 
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: '{{ session('error') }}'
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: "{{ route('profil.updatePassword') }}",
+            type: 'POST',
+            data: formData,
+            success: function(res) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: res.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                $('#form-password')[0].reset();
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: xhr.responseJSON.message
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Terjadi kesalahan',
+                        text: 'Silakan coba lagi.'
+                    });
+                }
+            }
         });
-    @endif
+    });
 </script>
 @endpush

@@ -10,26 +10,26 @@
     </li>
   </ul>
 
-  <!-- User Profile -->
-  <ul class="navbar-nav ml-auto">
-    <li class="nav-item dropdown">
-      <a class="nav-link d-flex align-items-center text-white" data-toggle="dropdown" href="#" role="button">
-        <img 
-          src="{{ Auth::user()->foto ? asset('storage/' . Auth::user()->foto) : asset('images/default.png') }}" 
-          class="img-circle elevation-2 mr-2" 
-          alt="User Image" width="30" height="30">
-        <span class="d-none d-md-inline">{{ Auth::user()->nama }}</span>
-        <i class="fas fa-angle-down ml-1"></i>
+ <!-- User Profile -->
+<ul class="navbar-nav ml-auto">
+  <li class="nav-item dropdown">
+    <a class="nav-link d-flex align-items-center text-white" data-toggle="dropdown" href="#" role="button">
+      <img 
+        src="{{ Auth::user()->foto ? asset('storage/' . Auth::user()->foto) : asset('images/default.png') }}" 
+        class="img-circle elevation-2 mr-2" 
+        alt="User Image" width="30" height="30">
+      <span class="d-none d-md-inline">{{ Auth::user()->nama }}</span>
+      <i class="fas fa-angle-down ml-1"></i>
+    </a>
+    <div class="dropdown-menu dropdown-menu-right shadow" style="min-width: 180px;">
+      <a href="{{ route('profil.show') }}" class="dropdown-item">
+        <i class="fas fa-user mr-2"></i> Profil Saya
       </a>
-      <div class="dropdown-menu dropdown-menu-right shadow" style="min-width: 180px;">
-        <a href="{{ url('/profil') }}" class="dropdown-item">
-          <i class="fas fa-user mr-2"></i> Profil Saya
-        </a>
-        <div class="dropdown-divider"></div>
-        <a href="{{ url('/logout') }}" class="dropdown-item text-danger">
-          <i class="fas fa-sign-out-alt mr-2"></i> Keluar
-        </a>
-      </div>
-    </li>
-  </ul>
+      <div class="dropdown-divider"></div>
+      <a href="{{ url('/logout') }}" class="dropdown-item text-danger">
+        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+      </a>
+    </div>
+  </li>
+</ul>
 </nav>

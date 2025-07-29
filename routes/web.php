@@ -52,9 +52,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard-pimpinan', [DashboardPimpinanController::class, 'index'])->name('dashboard.pimpinan');
 
 
-    // 👤 Profil
-    Route::get('/profil', [ProfilController::class, 'edit'])->name('profil.edit');
-    Route::post('/profil', [ProfilController::class, 'update'])->name('profil.update');
+// 👤 Profil
+Route::get('/profil', [ProfilController::class, 'show'])->name('profil.show'); // tampilan read-only
+Route::get('/profil/edit', [ProfilController::class, 'edit'])->name('profil.edit'); // form edit
+Route::post('/profil', [ProfilController::class, 'update'])->name('profil.update'); // simpan data
+Route::post('/profil/update-password', [ProfilController::class, 'updatePassword'])->name('profil.updatePassword');
+
+
 
     // 🕒 Presensi
     Route::get('/presensi', [PresensiController::class, 'index'])->name('presensi.index');
