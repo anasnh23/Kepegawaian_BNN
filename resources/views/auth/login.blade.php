@@ -8,100 +8,118 @@
     <meta name="theme-color" content="#0d47a1">
     <title>Login - SIAP BNN</title>
 
-    <!-- Assets -->
-    <link rel="icon" type="image/png" href="{{ asset('adminlte/dist/img/bnn.jpg') }}" sizes="32x32">
+    <link rel="icon" href="{{ asset('adminlte/dist/img/bnn.jpg') }}" type="image/png">
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- Custom Style -->
     <style>
         body {
-            background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+            margin: 0;
+            background: linear-gradient(to right, #102b4c, #0c1f35);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0;
+            height: 100vh;
+            color: white;
         }
 
         .login-box {
-            background: #fff;
-            padding: 2.5rem 2rem;
-            border-radius: 16px;
-            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2.5rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
             width: 100%;
             max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
 
         .login-box img {
-            width: 90px;
+            width: 80px;
             display: block;
             margin: 0 auto 1rem;
         }
 
         .login-box h1 {
+            font-size: 24px;
             text-align: center;
-            font-size: 1.9rem;
-            color: #0d47a1;
-            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 0.2rem;
+            letter-spacing: 1px;
         }
 
         .login-box h5 {
             text-align: center;
-            color: #555;
+            font-weight: 300;
+            color: #dddddd;
             margin-bottom: 1.8rem;
         }
 
         .input-wrapper {
             display: flex;
             align-items: center;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 1.2rem;
-            background: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 15px;
+            margin-bottom: 1.3rem;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #ffffff;
+            box-shadow: 0 0 5px #00c3ff;
         }
 
         .input-wrapper i {
             margin-right: 10px;
-            color: #999;
-            font-size: 16px;
+            color: #ffffff;
         }
 
         .input-wrapper input {
+            background: transparent;
             border: none;
             outline: none;
-            flex: 1;
+            color: #fff;
             font-size: 15px;
-            background: transparent;
+            flex: 1;
+        }
+
+        .input-wrapper input::placeholder {
+            color: #bbb;
         }
 
         .form-links {
             text-align: right;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-links a {
             font-size: 14px;
-            color: #0d47a1;
+            color: #bbdefb;
             text-decoration: none;
         }
 
+        .form-links a:hover {
+            text-decoration: underline;
+        }
+
         .btn-login {
-            background-color: #0d47a1;
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 16px;
             width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background-color: #1565c0;
+            color: white;
+            font-weight: 600;
             transition: background 0.3s ease;
         }
 
         .btn-login:hover {
-            background-color: #1565c0;
+            background-color: #1e88e5;
         }
     </style>
 </head>
@@ -110,8 +128,8 @@
 
     <div class="login-box">
         <img src="{{ asset('adminlte/dist/img/bnn.jpg') }}" alt="BNN Logo">
-        <h1>SIAP-BNN</h1>
-        <h5>Silakan login menggunakan akun Anda</h5>
+        <h1>SIAP BNN</h1>
+        <h5>Masuk dengan akun Anda</h5>
 
         <form id="formLogin" method="POST">
             @csrf
@@ -134,28 +152,22 @@
         </form>
     </div>
 
-    <!-- Scripts -->
     <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
     <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('adminlte/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
-        $(document).ready(function () {
+        $(function () {
             $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
             });
 
             $('#formLogin').on('submit', function (e) {
                 e.preventDefault();
                 let formData = $(this).serialize();
 
-                $.ajax({
-                    url: "{{ url('/login') }}",
-                    type: "POST",
-                    data: formData,
-                    success: function (res) {
+                $.post("{{ url('/login') }}", formData)
+                    .done(function (res) {
                         if (res.status) {
                             Swal.fire({
                                 icon: 'success',
@@ -172,15 +184,14 @@
                                 text: res.message
                             });
                         }
-                    },
-                    error: function (xhr) {
+                    })
+                    .fail(function (xhr) {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal',
-                            text: xhr.responseJSON?.message || 'Terjadi kesalahan saat login.'
+                            title: 'Terjadi Kesalahan',
+                            text: xhr.responseJSON?.message || 'Server tidak merespon.'
                         });
-                    }
-                });
+                    });
             });
         });
     </script>

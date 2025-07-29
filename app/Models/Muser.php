@@ -69,5 +69,10 @@ public function kgp()
     return $this->hasOne(Kgp::class, 'id_user', 'id_user');
 }
 
+public function notifications()
+{
+    return $this->hasMany(Notification::class, 'user_id', 'id_user');
+}
+
 
 }
