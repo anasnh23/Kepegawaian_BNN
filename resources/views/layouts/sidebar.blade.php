@@ -1,4 +1,4 @@
-<!-- Sidebar Menu -->
+<!-- Sidebar Menu --><!-- Sidebar Menu -->
 <nav class="mt-2">
   <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
@@ -32,7 +32,7 @@
     </li>
     @endif
 
-   <!-- Header SISTEM KEPEGAWAIAN (diletakkan di atas) -->
+    <!-- Header -->
     <li class="nav-header text-warning">SISTEM KEPEGAWAIAN</li>
 
     <!-- Menu Pegawai -->
@@ -43,18 +43,18 @@
         <p>Presensi Pegawai</p>
       </a>
     </li>
-<li class="nav-item">
-  <a href="{{ url('/cutipegawai') }}" class="nav-link {{ ($activeMenu == 'cuti') ? 'active' : '' }}">
-    <i class="fas fa-calendar-check nav-icon text-primary"></i>
-    <p>Pengajuan Cuti</p>
-  </a>
-</li>
-<li class="nav-item">
-  <a href="{{ url('/riwayat-cuti') }}" class="nav-link {{ ($activeMenu == 'riwayat-cuti') ? 'active' : '' }}">
-    <i class="fas fa-history nav-icon text-info"></i>
-    <p>Riwayat Cuti</p>
-  </a>
-</li>
+    <li class="nav-item">
+      <a href="{{ url('/cutipegawai') }}" class="nav-link {{ ($activeMenu == 'cuti') ? 'active' : '' }}">
+        <i class="fas fa-calendar-check nav-icon text-primary"></i>
+        <p>Pengajuan Cuti</p>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{{ url('/riwayat-cuti') }}" class="nav-link {{ ($activeMenu == 'riwayat-cuti') ? 'active' : '' }}">
+        <i class="fas fa-history nav-icon text-info"></i>
+        <p>Riwayat Cuti</p>
+      </a>
+    </li>
     <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
       <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
@@ -104,8 +104,8 @@
 
     <!-- Menu Admin -->
     @if(Auth::user()->id_level == 1)
-    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'active' : '' }}">
+    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
         <p>
           Manajemen Kepegawaian
@@ -132,8 +132,8 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ url('/ref_jabatan') }}" class="nav-link {{ ($activeMenu == 'jabatan') ? 'active' : '' }}">
-            <i class="fas fa-briefcase nav-icon"></i>
+          <a href="{{ url('/ref_jabatan') }}" class="nav-link {{ ($activeMenu == 'ref_jabatan') ? 'active' : '' }}">
+            <i class="fas fa-briefcase nav-icon text-info"></i>
             <p>Data Jabatan</p>
           </a>
         </li>
@@ -186,5 +186,6 @@
   </ul>
 </nav>
 <!-- End Sidebar -->
+
 
 </aside>

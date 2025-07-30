@@ -6,16 +6,14 @@
 </div>
 
 <form id="formEditJabatan" enctype="multipart/form-data">
-    @csrf
-    @method('PUT')
     <input type="hidden" name="id_ref_jabatan" value="{{ $refJabatan->id_ref_jabatan }}">
-    
+
     <div class="modal-body">
         <div class="row">
 
             <div class="form-group col-md-6">
                 <label for="nama_jabatan">Nama Jabatan <span class="text-danger">*</span></label>
-                <input type="text" name="nama_jabatan" class="form-control" value="{{ $refJabatan->nama_jabatan }}" required>
+                <input type="text" name="nama_jabatan" class="form-control" required value="{{ $refJabatan->nama_jabatan }}">
                 @error('nama_jabatan')
                     <div class="text-danger small">{{ $message }}</div>
                 @enderror
@@ -45,4 +43,3 @@
         <button type="submit" class="btn btn-primary">Update</button>
     </div>
 </form>
-@endsection

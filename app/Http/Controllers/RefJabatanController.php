@@ -10,11 +10,21 @@ class RefJabatanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $refJabatans = RefJabatanModel::all(); // Mengambil semua data jabatan referensi
-        return view('ref_jabatan.index', compact('refJabatans'));
-    }
+public function index()
+{
+    $refJabatans = RefJabatanModel::all();
+
+    $breadcrumb = (object)[
+        'title' => 'Data Jabatan',
+        'list' => ['Dashboard', 'Kepegawaian', 'Data Jabatan']
+    ];
+
+    $activeMenu = 'ref_jabatan';
+
+    return view('ref_jabatan.index', compact('refJabatans', 'breadcrumb', 'activeMenu'));
+}
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -52,10 +62,12 @@ class RefJabatanController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(RefJabatanModel $refJabatan)
-    {
-        return view('ref_jabatan.edit', compact('refJabatan')); // Menampilkan form untuk mengedit jabatan
-    }
+public function edit($id)
+{
+    $refJabatan = RefJabatanModel::findOrFail($id);
+    return view('ref_jabatan.edit', compact('refJabatan'));
+}
+
 
     /**
      * Update the specified resource in storage.
