@@ -71,7 +71,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ url('/riwayat-gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat-gaji') ? 'active' : '' }}">
+          <a href="{{ url('/riwayat_gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat_gaji') ? 'active' : '' }}">
             <i class="fas fa-money-bill nav-icon"></i>
             <p>Riwayat Gaji</p>
           </a>

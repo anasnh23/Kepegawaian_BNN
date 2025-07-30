@@ -17,6 +17,7 @@ use App\Http\Controllers\CutiController;
 use App\Http\Controllers\AdminCutiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
+use App\Http\Controllers\RiwayatGajiController;
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -89,5 +90,8 @@ Route::middleware(['auth'])->group(function () {
 
     // jabatan
     Route::resource('/ref_jabatan', RefJabatanController::class);
+
+    //RiwayatGaji
+    Route::resource('/riwayat_gaji', RiwayatGajiController::class);
 
 });
