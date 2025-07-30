@@ -10,12 +10,20 @@ class RiwayatGajiController extends Controller
 {
     /**
      * Display a listing of the resource.
-     */
-    public function index()
-    {
-        $riwayatGajis = RiwayatGajiModel::with('user')->get(); // Eager load relasi user untuk efisiensi
-        return view('riwayat_gaji.index', compact('riwayatGajis'));
-    }
+     */public function index()
+{
+    $riwayatGajis = RiwayatGajiModel::with('user')->get();
+
+    $breadcrumb = (object)[
+        'title' => 'Riwayat Gaji Pegawai',
+        'list' => ['Dashboard', 'Kepegawaian', 'Riwayat Gaji']
+    ];
+
+    $activeMenu = 'riwayat_gaji';
+
+    return view('riwayat_gaji.index', compact('riwayatGajis', 'breadcrumb', 'activeMenu'));
+}
+
 
     /**
      * Show the form for creating a new resource.

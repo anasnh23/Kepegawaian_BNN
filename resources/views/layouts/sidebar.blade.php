@@ -1,4 +1,4 @@
-<!-- Sidebar Menu --><!-- Sidebar Menu -->
+<!-- Sidebar Menu -->
 <nav class="mt-2">
   <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
 
@@ -55,8 +55,8 @@
         <p>Riwayat Cuti</p>
       </a>
     </li>
-    <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat-gaji','riwayat-jabatan']) ? 'active' : '' }}">
+    <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat_gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat_gaji','riwayat-jabatan']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
         <p>
           Manajemen Kepegawaian
@@ -104,8 +104,8 @@
 
     <!-- Menu Admin -->
     @if(Auth::user()->id_level == 1)
-    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'menu-open' : '' }}">
-      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat-gaji','pendidikan','laporan-gaji']) ? 'active' : '' }}">
+    <li class="nav-item {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat_gaji','pendidikan','laporan-gaji']) ? 'menu-open' : '' }}">
+      <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','presensi-admin','cuti','jabatan','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp','riwayat_gaji','pendidikan','laporan-gaji']) ? 'active' : '' }}">
         <i class="nav-icon fas fa-user-shield"></i>
         <p>
           Manajemen Kepegawaian
@@ -162,7 +162,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="{{ url('/riwayat-gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat-gaji') ? 'active' : '' }}">
+          <a href="{{ url('/riwayat_gaji') }}" class="nav-link {{ ($activeMenu == 'riwayat_gaji') ? 'active' : '' }}">
             <i class="fas fa-money-bill-wave nav-icon"></i>
             <p>Riwayat Gaji</p>
           </a>
