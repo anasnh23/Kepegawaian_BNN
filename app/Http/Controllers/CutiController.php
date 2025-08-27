@@ -53,36 +53,54 @@ class CutiController extends Controller
             return response()->json(['message' => 'Minimal cuti adalah 1 hari kerja.'], 422);
         }
 
-        if ($jenis == 'Cuti Tahunan' && $lama_kerja < 1) {
-            return response()->json(['message' => 'Minimal 1 tahun kerja untuk mengajukan Cuti Tahunan.'], 422);
-        }
+        // Validasi berdasarkan jenis cuti sesuai Peraturan Kepala BNN No. 5 Tahun 2019
+        if ($jenis === 'Tahunan') {
+            if ($lama_kerja < 1) {
+                return response()->json(['message' => 'Minimal 1 tahun kerja untuk mengajukan Cuti Tahunan.'], 422);
+            }
 
-        if ($jenis == 'Cuti Besar' && $lama_kerja < 5) {
-            return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti Besar.'], 422);
-        }
-
-        if ($jenis == 'Cuti Besar' && $lama_cuti > 90) {
-            return response()->json(['message' => 'Durasi maksimal Cuti Besar adalah 3 bulan.'], 422);
-        }
-
-        if ($jenis == 'Cuti Karena Alasan Penting' && $lama_cuti > 30) {
-            return response()->json(['message' => 'Durasi maksimal Cuti Alasan Penting adalah 1 bulan.'], 422);
-        }
-
-        if ($jenis == 'Cuti di Luar Tanggungan Negara' && $lama_kerja < 5) {
-            return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti di Luar Tanggungan Negara.'], 422);
-        }
-
-        if ($jenis == 'Cuti Tahunan') {
             $hakCuti = $this->hitungHakCutiTahunan($user);
             $terpakai = Cuti::where('id_user', $user->id_user)
-                ->where('jenis_cuti', 'Cuti Tahunan')
+                ->where('jenis_cuti', 'Tahunan')
                 ->where('status', 'Disetujui')
                 ->whereYear('tanggal_mulai', now()->year)
                 ->sum(DB::raw('DATEDIFF(tanggal_selesai, tanggal_mulai) + 1'));
 
             if (($terpakai + $lama_cuti) > $hakCuti) {
                 return response()->json(['message' => "Hak cuti tahunan hanya $hakCuti hari. Sudah digunakan: $terpakai hari."], 422);
+            }
+        }
+
+        if ($jenis === 'Besar') {
+            if ($lama_kerja < 5) {
+                return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti Besar.'], 422);
+            }
+            if ($lama_cuti > 90) {
+                return response()->json(['message' => 'Durasi maksimal Cuti Besar adalah 3 bulan.'], 422);
+            }
+        }
+
+        if ($jenis === 'Melahirkan') {
+            if ($user->jenis_kelamin !== 'Perempuan') {
+                return response()->json(['message' => 'Cuti Melahirkan hanya berlaku untuk pegawai perempuan.'], 422);
+            }
+            if ($lama_cuti > 90) {
+                return response()->json(['message' => 'Durasi Cuti Melahirkan maksimal 3 bulan.'], 422);
+            }
+        }
+
+        if ($jenis === 'Penting') {
+            if ($lama_cuti > 30) {
+                return response()->json(['message' => 'Durasi maksimal Cuti Karena Alasan Penting adalah 1 bulan.'], 422);
+            }
+        }
+
+        if ($jenis === 'Luar Tanggungan Negara') {
+            if ($lama_kerja < 5) {
+                return response()->json(['message' => 'Minimal 5 tahun kerja untuk mengajukan Cuti di Luar Tanggungan Negara.'], 422);
+            }
+            if ($lama_cuti > 1095) {
+                return response()->json(['message' => 'Durasi maksimal Cuti di Luar Tanggungan Negara adalah 3 tahun.'], 422);
             }
         }
 
@@ -97,7 +115,6 @@ class CutiController extends Controller
             'status' => 'Menunggu',
         ]);
 
-        // Kirim notifikasi ke semua admin
         $adminList = MUser::where('id_level', 1)->get();
         foreach ($adminList as $admin) {
             NotifikasiHelper::send(
@@ -111,39 +128,37 @@ class CutiController extends Controller
         return response()->json(['message' => 'Pengajuan cuti berhasil dikirim.']);
     }
 
-  public function uploadDokumen(Request $request)
-{
-    $request->validate([
-        'cuti_id' => 'required|exists:cuti,id_cuti',
-        'dokumen' => 'required|file|mimes:pdf|max:2048',
-    ]);
+    public function uploadDokumen(Request $request)
+    {
+        $request->validate([
+            'cuti_id' => 'required|exists:cuti,id_cuti',
+            'dokumen' => 'required|file|mimes:pdf|max:2048',
+        ]);
 
-    $cuti = Cuti::with('pegawai')->findOrFail($request->cuti_id); // tambahkan relasi pegawai
+        $cuti = Cuti::with('pegawai')->findOrFail($request->cuti_id);
 
-    $file = $request->file('dokumen');
-    $filename = time() . '_' . $file->getClientOriginalName();
-    $path = $file->storeAs('dokumen_cuti', $filename, 'public');
+        $file = $request->file('dokumen');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('dokumen_cuti', $filename, 'public');
 
-    $approval = ApprovalPimpinan::firstOrNew(['id_cuti' => $cuti->id_cuti]);
-    $approval->dokumen_path = $path;
-    $approval->status = null;
-    $approval->approved_by = null;
-    $approval->save();
+        $approval = ApprovalPimpinan::firstOrNew(['id_cuti' => $cuti->id_cuti]);
+        $approval->dokumen_path = $path;
+        $approval->status = null;
+        $approval->approved_by = null;
+        $approval->save();
 
-    // ✅ Kirim notifikasi ke pimpinan
-    $pimpinanList = MUser::where('id_level', 3)->get();
-    foreach ($pimpinanList as $pimpinan) {
-        NotifikasiHelper::send(
-            $pimpinan->id_user,
-            'cuti',
-            'Dokumen cuti dari ' . $cuti->pegawai->nama . ' telah diunggah dan menunggu persetujuan.',
-            route('approval.dokumen')
-        );
+        $pimpinanList = MUser::where('id_level', 3)->get();
+        foreach ($pimpinanList as $pimpinan) {
+            NotifikasiHelper::send(
+                $pimpinan->id_user,
+                'cuti',
+                'Dokumen cuti dari ' . $cuti->pegawai->nama . ' telah diunggah dan menunggu persetujuan.',
+                route('approval.dokumen')
+            );
+        }
+
+        return back()->with('success', 'Dokumen cuti berhasil diupload ke pimpinan.');
     }
-
-    return back()->with('success', 'Dokumen cuti berhasil diupload ke pimpinan.');
-}
-
 
     private function hitungHakCutiTahunan($user)
     {

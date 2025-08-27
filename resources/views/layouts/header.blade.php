@@ -44,16 +44,17 @@
         <div class="dropdown-divider"></div>
 
         @forelse($notifications as $notif)
-          <a href="{{ route('notifikasi.baca.id', $notif->id) }}" class="dropdown-item">
-            <div class="d-flex">
-              <div class="mr-2 pt-1">
+          <a href="{{ route('notifikasi.baca.id', $notif->id) }}" 
+             class="dropdown-item {{ $notif->is_read ? '' : 'bg-lightblue' }}">
+            <div class="d-flex align-items-start">
+              <div class="mr-3 pt-1">
                 <i class="{{ 
                     $notif->type == 'cuti' ? 'fas fa-calendar-alt' : 
                     ($notif->type == 'presensi' ? 'fas fa-user-clock' : 'fas fa-info-circle') 
                 }} text-primary"></i>
               </div>
               <div class="flex-grow-1 small text-wrap" style="white-space: normal;">
-                <div>{!! $notif->message !!}</div>
+                <div class="font-weight-semibold">{{ $notif->message }}</div>
                 <div class="text-muted text-xs mt-1">{{ $notif->created_at->diffForHumans() }}</div>
               </div>
             </div>

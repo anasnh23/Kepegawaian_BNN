@@ -56,6 +56,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/presensi', [PresensiController::class, 'index'])->name('presensi.index');
     Route::post('/presensi', [PresensiController::class, 'store'])->name('presensi.store');
     Route::get('/presensi-admin', [PresensiAdminController::class, 'index'])->name('presensi.admin');
+    Route::get('/presensi/export', [PresensiAdminController::class, 'exportExcel'])->name('presensi.export');
 
     // Pegawai & Pangkat
     Route::resource('/pegawai', PegawaiController::class);

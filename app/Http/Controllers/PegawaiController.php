@@ -124,20 +124,20 @@ public function edit($id)
 }
 
 
-  public function update(Request $request, $id)
+public function update(Request $request, $id)
 {
     $user = MUser::findOrFail($id);
 
     $request->validate([
-        'nip' => 'required|unique:m_user,nip,' . $id . ',id_user',
-        'email' => 'required|email|unique:m_user,email,' . $id . ',id_user',
-        'nama' => 'required',
-        'id_level' => 'required|exists:m_level,id_level',
-        'jenis_kelamin' => 'required|in:L,P',
-        'foto' => 'nullable|image|max:2048',
+        'nip'          => 'required|unique:m_user,nip,' . $id . ',id_user',
+        'email'        => 'required|email|unique:m_user,email,' . $id . ',id_user',
+        'nama'         => 'required',
+        'id_level'     => 'required|exists:m_level,id_level',
+        'jenis_kelamin'=> 'required|in:L,P',
+        'foto'         => 'nullable|image|max:2048',
     ]);
 
-    // Proses update foto jika ada
+    // === FOTO ===
     if ($request->hasFile('foto')) {
         if ($user->foto && Storage::disk('public')->exists($user->foto)) {
             Storage::disk('public')->delete($user->foto);
@@ -145,58 +145,67 @@ public function edit($id)
         $user->foto = $request->file('foto')->store('foto', 'public');
     }
 
-    // Update data user
-    $user->update([
-        'id_level' => $request->id_level,
-        'nip' => $request->nip,
-        'email' => $request->email,
-        'nama' => $request->nama,
-        'username' => $request->username,
-        'jenis_kelamin' => $request->jenis_kelamin,
-        'agama' => $request->agama,
-        'no_tlp' => $request->no_tlp,
-    ]);
+    // === DATA DASAR ===
+    $user->id_level      = $request->id_level;
+    $user->nip           = $request->nip;
+    $user->email         = $request->email;
+    $user->nama          = $request->nama;
+    $user->username      = $request->username;         // dipakai juga untuk reset pass
+    $user->jenis_kelamin = $request->jenis_kelamin;
+    $user->agama         = $request->agama;
+    $user->no_tlp        = $request->no_tlp;
 
-    // Update password jika diisi
-    if ($request->filled('password')) {
+    // === PASSWORD HANDLING ===
+    // Prioritas:
+    // 1) Jika reset_password=1 → set password = username (hash).
+    // 2) Kalau admin isi password manual → pakai itu.
+    // 3) Selain itu → password tidak diubah.
+    if ($request->boolean('reset_password')) {
+        if (!empty($request->username)) {
+            $user->password = Hash::make($request->username);
+        }
+        // jika username kosong, biarkan password lama (bisa tambahkan guard kalau mau)
+    } elseif ($request->filled('password')) {
         $user->password = Hash::make($request->password);
-        $user->save();
     }
 
-    // Update atau buat pendidikan
-    if ($request->jenis_pendidikan) {
+    $user->save();
+
+    // === PENDIDIKAN ===
+    if ($request->filled('jenis_pendidikan') || $request->filled('tahun_kelulusan')) {
         $pendidikan = PendidikanModel::firstOrNew(['id_user' => $user->id_user]);
         $pendidikan->jenis_pendidikan = $request->jenis_pendidikan;
-        $pendidikan->tahun_kelulusan = $request->tahun_kelulusan;
+        $pendidikan->tahun_kelulusan  = $request->tahun_kelulusan;
         $pendidikan->save();
     }
 
-    // Update atau buat jabatan
-    if ($request->id_ref_jabatan) {
+    // === JABATAN ===
+    if ($request->filled('id_ref_jabatan') || $request->filled('tmt_jabatan')) {
         $jabatan = JabatanModel::firstOrNew(['id_user' => $user->id_user]);
         $jabatan->id_ref_jabatan = $request->id_ref_jabatan;
-        $jabatan->tmt = $request->tmt_jabatan;
+        $jabatan->tmt            = $request->tmt_jabatan;
         $jabatan->save();
     }
 
-    // Update atau buat pangkat
-    if ($request->id_ref_pangkat) {
+    // === PANGKAT ===
+    if ($request->filled('id_ref_pangkat')) {
         $pangkat = Pangkat::firstOrNew(['id_user' => $user->id_user]);
         $pangkat->id_ref_pangkat = $request->id_ref_pangkat;
         $pangkat->save();
     }
 
-    // ⬇ Tambahkan ke tabel KGP (kenaikan gaji berkala)
-    if ($request->id_ref_pangkat && $request->tmt_pangkat) {
+    // Tambahkan entri KGP jika ada TMT pangkat
+    if ($request->filled('id_ref_pangkat') && $request->filled('tmt_pangkat')) {
         Kgp::create([
-            'id_user' => $user->id_user,
-            'tahun_kgp' => date('Y', strtotime($request->tmt_pangkat)),
-            'tmt' => $request->tmt_pangkat,
+            'id_user'    => $user->id_user,
+            'tahun_kgp'  => date('Y', strtotime($request->tmt_pangkat)),
+            'tmt'        => $request->tmt_pangkat,
         ]);
     }
 
     return response()->json(['message' => 'Data pegawai berhasil diperbarui.']);
 }
+    
 
     public function show($id)
     {
