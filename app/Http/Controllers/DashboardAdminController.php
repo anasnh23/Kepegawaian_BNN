@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Support\Facades\DB;
 use App\Models\PresensiModel;
 use App\Models\MUser;
@@ -11,48 +12,88 @@ use Carbon\Carbon;
 class DashboardAdminController extends Controller
 {
     public function index()
-{
-    $bulanIni = Carbon::now()->format('Y-m');
-    
-    // Statistik presensi
-    $presensiStats = PresensiModel::selectRaw('status, COUNT(*) as jumlah')
-        ->where('tanggal', 'like', $bulanIni.'%')
-        ->groupBy('status')
-        ->pluck('jumlah', 'status');
+    {
+        // ====== Periode: ?range=month|30d|all ======
+        $range = request('range', 'month');
+        if ($range === '30d') {
+            $start = Carbon::now()->subDays(30)->startOfDay()->toDateString();
+            $end   = Carbon::now()->endOfDay()->toDateString();
+            $labelPeriode = '30 Hari Terakhir';
+        } elseif ($range === 'all') {
+            $start = null; $end = null;
+            $labelPeriode = 'Semua Waktu';
+        } else { // month (default)
+            $start = Carbon::now()->startOfMonth()->toDateString();
+            $end   = Carbon::now()->endOfMonth()->toDateString();
+            $labelPeriode = 'Bulan Ini';
+        }
 
-    // Statistik cuti bulan ini
-    $cutiStats = Cuti::selectRaw('status, COUNT(*) as jumlah')
-        ->where('tanggal_pengajuan', 'like', $bulanIni.'%')
-        ->groupBy('status')
-        ->pluck('jumlah', 'status');
+        // ====== PRESENSI ======
+        $qPres = PresensiModel::select('status', DB::raw('COUNT(*) AS jumlah'));
+        if ($start && $end) {
+            $qPres->whereBetween('tanggal', [$start, $end]);
+        }
+        $presRaw = $qPres->groupBy('status')->pluck('jumlah','status')->toArray();
 
-    // Total pegawai
-    $totalPegawai = MUser::count();
+        // Normalisasi key (abaikan kapital & underscore)
+        $norm = [];
+        foreach ($presRaw as $k => $v) {
+            $key = strtolower(trim($k));
+            $key = str_replace('_', ' ', $key);
+            $norm[$key] = (int)$v;
+        }
+        $presensiStats = [
+            'hadir'       => $norm['hadir']        ?? 0,
+            'terlambat'   => $norm['terlambat']    ?? 0,
+            'tidak hadir' => $norm['tidak hadir']  ?? 0,
+        ];
 
-    // Data grafik golongan pangkat
-    $golonganPangkat = DB::table('pangkat')
-        ->join('ref_golongan_pangkat', 'pangkat.id_ref_pangkat', '=', 'ref_golongan_pangkat.id_ref_pangkat')
-        ->select('ref_golongan_pangkat.golongan_pangkat', DB::raw('count(*) as jumlah'))
-        ->groupBy('ref_golongan_pangkat.golongan_pangkat')
-        ->pluck('jumlah', 'golongan_pangkat');
+        // ====== CUTI (pakai tanggal_pengajuan, ganti ke tanggal_mulai bila perlu) ======
+        $qCuti = Cuti::select('status', DB::raw('COUNT(*) AS jumlah'));
+        if ($start && $end) {
+            $qCuti->whereBetween('tanggal_pengajuan', [$start, $end]);
+        }
+        $cutiStats = $qCuti->groupBy('status')->pluck('jumlah', 'status');
 
-    // Jumlah kenaikan gaji tahun ini
-    $kenaikanGaji = Kgp::whereYear('tmt', now()->year)->count();
+        // ====== TOTAL PEGAWAI & GENDER ======
+        $totalPegawai = (int) MUser::count();
 
-    $breadcrumb = (object)[
-        'title' => 'Dashboard Admin',
-        'list' => ['Dashboard']
-    ];
+        $genderRaw = MUser::select('jenis_kelamin', DB::raw('COUNT(*) AS jumlah'))
+            ->whereIn('jenis_kelamin', ['L','P'])
+            ->groupBy('jenis_kelamin')
+            ->pluck('jumlah','jenis_kelamin')
+            ->toArray();
 
-    $activeMenu = 'dashboard';
+        $jumlahLaki      = (int)($genderRaw['L'] ?? 0);
+        $jumlahPerempuan = (int)($genderRaw['P'] ?? 0);
 
-    return view('dashboard.admin', compact(
-        'breadcrumb', 'activeMenu',
-        'presensiStats', 'cutiStats',
-        'totalPegawai', 'golonganPangkat',
-        'kenaikanGaji'
-    ));
-}
+        // ====== DISTRIBUSI GOLONGAN PANGKAT ======
+        $gp = DB::table('pangkat AS p')
+            ->leftJoin('ref_golongan_pangkat AS rgp', 'rgp.id_ref_pangkat', '=', 'p.id_ref_pangkat')
+            ->select(DB::raw("COALESCE(rgp.golongan_pangkat,'-') AS gol"), DB::raw('COUNT(*) AS jumlah'))
+            ->groupBy('gol')
+            ->orderBy('jumlah','desc')
+            ->pluck('jumlah','gol')
+            ->toArray();
 
+        $golonganPangkat = $gp;                                // map untuk card/info lain
+        $pangkatLabels   = array_values(array_keys($gp));       // labels untuk Chart.js
+        $pangkatValues   = array_values(array_map('intval',$gp));
 
+        // ====== KENAIKAN GAJI (KGP) TAHUN INI ======
+        $kenaikanGaji = (int) Kgp::whereYear('tmt', date('Y'))->count();
+
+        // ====== UI ======
+        $breadcrumb = (object)[ 'title' => 'Dashboard Admin', 'list' => ['Dashboard'] ];
+        $activeMenu = 'dashboard';
+
+        return view('dashboard.admin', compact(
+            'breadcrumb','activeMenu',
+            'presensiStats','cutiStats',
+            'totalPegawai','kenaikanGaji',
+            'jumlahLaki','jumlahPerempuan',
+            'golonganPangkat','pangkatLabels','pangkatValues',
+            'range','labelPeriode'
+        ));
+    }
 }
