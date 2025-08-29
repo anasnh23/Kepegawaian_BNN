@@ -18,6 +18,10 @@ use App\Http\Controllers\AdminCutiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
+use App\Http\Controllers\PendidikanController;
+use App\Http\Controllers\KgpController;
+
+
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -94,5 +98,11 @@ Route::middleware(['auth'])->group(function () {
 
     //RiwayatGaji
     Route::resource('/riwayat_gaji', RiwayatGajiController::class);
+
+    // Pendidikan (Tambahan baru)
+    Route::resource('/pendidikan', PendidikanController::class);
+
+    // Kgp (Tambahan baru)
+    Route::resource('/kgp', KgpController::class);
 
 });
