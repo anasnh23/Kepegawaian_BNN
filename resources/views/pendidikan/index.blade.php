@@ -26,7 +26,16 @@
                 <div class="col-md-4 mb-2">
                     <input type="text" id="filterNama" class="form-control form-control-sm shadow-sm" placeholder="Cari Nama Pegawai">
                 </div>
-                <div class="col-md-2 mb-2 text-right">
+                <div class="col-md-3 mb-2">
+                    <select id="filterJenisPendidikan" class="form-control form-control-sm shadow-sm">
+                        <option value="">-- Semua Jenis Pendidikan --</option>
+                        <option value="SMA">SMA</option>
+                        <option value="S1">S1</option>
+                        <option value="S2">S2</option>
+                        <option value="S3">S3</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
                     <button id="btnResetFilter" class="btn btn-sm btn-outline-secondary w-100 shadow-sm">
                         <i class="fas fa-sync-alt"></i> Reset
                     </button>
@@ -58,17 +67,27 @@
                             <td>{{ $data->user->nama ?? '-' }}</td>
                             @endif
                             <td>{{ $data->jenis_pendidikan ?? '-' }}</td>
-                            <td>{{ $data->tahun_kelulusan ?? '-' }}</td>
+                            <td class="text-center">{{ $data->tahun_kelulusan ?? '-' }}</td>
                             @if(auth()->user()->id_level == 1)
                             <td class="text-center">
-                                <button class="btn btn-sm btn-info btnViewPendidikan" data-id="{{ $data->id_pendidikan }}"><i class="fas fa-eye"></i></button>
-                                <button class="btn btn-sm btn-warning btnEditPendidikan" data-id="{{ $data->id_pendidikan }}"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="btn btn-sm btn-danger btnDeletePendidikan" data-id="{{ $data->id_pendidikan }}"><i class="fas fa-trash-alt"></i></button>
+                                <button class="btn btn-sm btn-info btnViewPendidikan" data-id="{{ $data->id_pendidikan }}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning btnEditPendidikan" data-id="{{ $data->id_pendidikan }}">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger btnDeletePendidikan" data-id="{{ $data->id_pendidikan }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </td>
                             @endif
                         </tr>
                         @empty
-                        <tr><td colspan="{{ auth()->user()->id_level == 1 ? 5 : 3 }}" class="text-center text-muted">Belum ada data pendidikan.</td></tr>
+                        <tr>
+                            <td colspan="{{ auth()->user()->id_level == 1 ? 5 : 3 }}" class="text-center text-muted">
+                                Belum ada data pendidikan.
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -118,12 +137,22 @@ $(document).ready(function () {
             processData: false,
             success: function (res) {
                 $('#modalFormPendidikan').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.success, timer: 1500, showConfirmButton: false });
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Berhasil!', 
+                    text: res.success, 
+                    timer: 1500, 
+                    showConfirmButton: false 
+                });
                 setTimeout(() => location.reload(), 1500);
             },
             error: function (err) {
                 console.error(err.responseJSON);
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal menyimpan data.' });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Gagal!', 
+                    text: err.responseJSON?.message || 'Gagal menyimpan data.' 
+                });
             }
         });
     });
@@ -140,7 +169,7 @@ $(document).ready(function () {
     $(document).on('submit', '#formEditPendidikan', function (e) {
         e.preventDefault();
         let formData = new FormData(this);
-        let id = $(this).find('input[name="id_pendidikan"]').val() || formData.get('id_pendidikan'); // Asumsi hidden input jika perlu
+        let id = $(this).find('input[name="id_pendidikan"]').val() || formData.get('id_pendidikan');
 
         formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
         formData.append('_method', 'PUT');
@@ -153,12 +182,22 @@ $(document).ready(function () {
             processData: false,
             success: function (res) {
                 $('#modalFormPendidikan').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.success, timer: 1500, showConfirmButton: false });
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Berhasil!', 
+                    text: res.success, 
+                    timer: 1500, 
+                    showConfirmButton: false 
+                });
                 setTimeout(() => location.reload(), 1500);
             },
             error: function (err) {
                 console.error(err.responseJSON);
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal update data.' });
+                Swal.fire({ 
+                    icon: 'error', 
+                    title: 'Gagal!', 
+                    text: err.responseJSON?.message || 'Gagal update data.' 
+                });
             }
         });
     });
@@ -198,11 +237,20 @@ $(document).ready(function () {
                         $('#row-' + id).fadeOut('slow', function () {
                             $(this).remove();
                         });
-                        Swal.fire({ icon: 'success', title: 'Terhapus!', text: res.success || 'Data berhasil dihapus.', timer: 1500 });
+                        Swal.fire({ 
+                            icon: 'success', 
+                            title: 'Terhapus!', 
+                            text: res.success || 'Data berhasil dihapus.', 
+                            timer: 1500 
+                        });
                     },
                     error: function (err) {
                         console.error(err.responseJSON);
-                        Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal menghapus data.' });
+                        Swal.fire({ 
+                            icon: 'error', 
+                            title: 'Gagal!', 
+                            text: err.responseJSON?.message || 'Gagal menghapus data.' 
+                        });
                     }
                 });
             }
@@ -212,21 +260,25 @@ $(document).ready(function () {
 
     // === FILTER (hanya jika admin) ===
     @if(auth()->user()->id_level == 1)
-    $('#filterNama').on('input', function () {
-        let nama = $(this).val().toLowerCase();
+    $('#filterNama, #filterJenisPendidikan').on('input change', function () {
+        let nama = $('#filterNama').val().toLowerCase();
+        let jenisPendidikan = $('#filterJenisPendidikan').val();
 
         $('#tabelPendidikan tr').each(function () {
             let row = $(this);
-            let textNama = row.find('td:eq(1)').text().toLowerCase();
+            let textNama = row.find('td:eq(1)').text().toLowerCase(); // Kolom nama pegawai
+            let textJenis = row.find('td:eq(2)').text(); // Kolom jenis pendidikan
 
             let matchNama = nama === '' || textNama.includes(nama);
+            let matchJenis = jenisPendidikan === '' || textJenis === jenisPendidikan;
 
-            row.toggle(matchNama);
+            row.toggle(matchNama && matchJenis);
         });
     });
 
     $('#btnResetFilter').click(function () {
         $('#filterNama').val('');
+        $('#filterJenisPendidikan').val('');
         $('#filterNama').trigger('input'); // Trigger ulang filter
     });
     @endif
