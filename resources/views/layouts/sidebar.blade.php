@@ -101,9 +101,9 @@
         </a>
       </li>
       <li class="nav-item">
-        <a href="{{ url('/approval-kgb') }}" class="nav-link {{ $activeMenu == 'approval-kgb' ? 'active' : '' }}">
+        <a href="{{ url('/approval-kgp') }}" class="nav-link {{ $activeMenu == 'approval-kgp' ? 'active' : '' }}">
           <i class="fas fa-money-check-alt nav-icon text-warning"></i>
-          <p>Approval KGB</p>
+          <p>Approval KGP</p>
         </a>
       </li>
     @endif

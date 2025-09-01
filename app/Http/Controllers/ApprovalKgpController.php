@@ -22,7 +22,7 @@ class ApprovalKgpController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('pimpinan.approval-kgb.index', compact('kgp'));
+        return view('pimpinan.approval-kgp.index', compact('kgp'));
     }
 
     /**
