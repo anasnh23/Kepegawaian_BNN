@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Models\MUser;
+use Carbon\Carbon;
 
 class ProfilController extends Controller
 {
@@ -21,7 +23,23 @@ class ProfilController extends Controller
             'pangkat.refPangkat'
         ])->findOrFail(Auth::id());
 
-        return view('profil.show', compact('user'));
+        // 🔹 Cari TMT awal dari riwayat_jabatan
+        $riwayatAwal = DB::table('riwayat_jabatan')
+            ->where('id_user', $user->id_user)
+            ->orderBy('tmt_mulai', 'asc')
+            ->first();
+
+        $masaKerjaTahun = 0;
+        $masaKerjaBulan = 0;
+
+        if ($riwayatAwal && $riwayatAwal->tmt_mulai) {
+            $tmt = Carbon::parse($riwayatAwal->tmt_mulai);
+            $diff = $tmt->diff(Carbon::now());
+            $masaKerjaTahun = $diff->y;
+            $masaKerjaBulan = $diff->m;
+        }
+
+        return view('profil.show', compact('user', 'masaKerjaTahun', 'masaKerjaBulan'));
     }
 
     /**
@@ -99,31 +117,31 @@ class ProfilController extends Controller
     /**
      * Menyimpan perubahan password secara AJAX.
      */
-public function updatePassword(Request $request)
-{
-    $user = Auth::user();
+    public function updatePassword(Request $request)
+    {
+        $user = Auth::user();
 
-    if (!$user) {
-        return response()->json(['message' => 'User tidak ditemukan.'], 404);
-    }
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan.'], 404);
+        }
 
-    $request->validate([
-        'old_password' => 'required',
-        'password' => 'required|min:3|confirmed',
-    ]);
+        $request->validate([
+            'old_password' => 'required',
+            'password' => 'required|min:3|confirmed',
+        ]);
 
-    if (!Hash::check($request->old_password, $user->password)) {
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json([
+                'message' => 'Password lama tidak cocok.'
+            ], 422);
+        }
+
+        /** @var \App\Models\MUser $user */
+        $user->password = Hash::make($request->password);
+        $user->save();
+
         return response()->json([
-            'message' => 'Password lama tidak cocok.'
-        ], 422);
+            'message' => 'Password berhasil diperbarui.'
+        ]);
     }
-
-    /** @var \App\Models\MUser $user */
-    $user->password = Hash::make($request->password);
-    $user->save();
-
-    return response()->json([
-        'message' => 'Password berhasil diperbarui.'
-    ]);
-}
 }

@@ -21,19 +21,18 @@ class DashboardPegawaiController extends Controller
         // =========================
         // Tentukan rentang tanggal
         // =========================
-        $start = null;   // Carbon|null  (start date inclusive)
-        $end   = null;   // Carbon|null  (end date inclusive)
+        $start = null;
+        $end   = null;
         $labelPeriode = '';
 
         switch ($periode) {
             case '30_hari':
-                $start = $now->copy()->subDays(29)->startOfDay(); // 30 hari terakhir termasuk hari ini
+                $start = $now->copy()->subDays(29)->startOfDay();
                 $end   = $now->copy()->endOfDay();
                 $labelPeriode = '30 Hari Terakhir';
                 break;
 
             case 'semua':
-                // tidak ada batas tanggal
                 $labelPeriode = 'Semua Periode';
                 break;
 
@@ -41,12 +40,12 @@ class DashboardPegawaiController extends Controller
             default:
                 $start = $now->copy()->startOfMonth();
                 $end   = $now->copy()->endOfMonth();
-                $labelPeriode = $now->translatedFormat('F Y'); // contoh: "Agustus 2025"
+                $labelPeriode = $now->translatedFormat('F Y');
                 $periode = 'bulan_ini';
                 break;
         }
 
-        // Helper untuk apply date filter pada query "tanggal" (kolom DATE)
+        // Helper untuk filter tanggal
         $applyTanggalFilter = function ($query) use ($start, $end) {
             if ($start && $end) {
                 $query->whereBetween('tanggal', [$start->toDateString(), $end->toDateString()]);
@@ -67,7 +66,6 @@ class DashboardPegawaiController extends Controller
             ->pluck('jumlah', 'status')
             ->toArray();
 
-        // Normalisasi status -> jumlah
         $presensiStats = [
             'hadir'        => 0,
             'terlambat'    => 0,
@@ -88,24 +86,18 @@ class DashboardPegawaiController extends Controller
         // =========================
         // 2) Statistik Cuti
         // =========================
-        // Catatan: kolom referensi tanggal cuti bisa berbeda-beda.
-        // Di sini saya pakai tanggal_pengajuan, menyesuaikan dengan kode sebelumnya.
         $cutiQuery = Cuti::where('id_user', $user->id_user);
 
-        if ($periode === 'bulan_ini') {
+        if (in_array($periode, ['bulan_ini', '30_hari'])) {
             $cutiQuery->whereBetween('tanggal_pengajuan', [
                 $start->toDateString(), $end->toDateString()
             ]);
-        } elseif ($periode === '30_hari') {
-            $cutiQuery->whereBetween('tanggal_pengajuan', [
-                $start->toDateString(), $end->toDateString()
-            ]);
-        } // 'semua' -> tanpa filter tanggal
+        }
 
         $cutiStats = (int) $cutiQuery->count();
 
         // =========================
-        // 3) Sisa Cuti (opsional, tetap tahunan)
+        // 3) Sisa Cuti Tahunan
         // =========================
         $jatahTahunan = (int) (config('app.jatah_cuti_tahunan', 12));
         $cutiTerpakaiTahunIni = Cuti::where('id_user', $user->id_user)
@@ -127,7 +119,37 @@ class DashboardPegawaiController extends Controller
             ->get();
 
         // =========================
-        // 5) View
+        // 5) Masa Kerja
+        // =========================
+        $masaKerjaTahun = 0;
+        $masaKerjaBulan = 0;
+
+        // Cari tmt dari riwayat_jabatan
+        $riwayatAwal = DB::table('riwayat_jabatan')
+            ->where('id_user', $user->id_user)
+            ->orderBy('tmt_mulai', 'asc')
+            ->first();
+
+        $tmt = $riwayatAwal ? Carbon::parse($riwayatAwal->tmt_mulai) : null;
+
+        // fallback kalau tidak ada
+        if (!$tmt) {
+            $kgpAwal = DB::table('kgp')
+                ->where('id_user', $user->id_user)
+                ->orderBy('tmt', 'asc')
+                ->first();
+
+            $tmt = $kgpAwal ? Carbon::parse($kgpAwal->tmt) : null;
+        }
+
+        if ($tmt) {
+            $diff = $tmt->diff(Carbon::now());
+            $masaKerjaTahun = $diff->y;
+            $masaKerjaBulan = $diff->m;
+        }
+
+        // =========================
+        // 6) View
         // =========================
         $breadcrumb = (object)[
             'title' => 'Dashboard Pegawai',
@@ -143,7 +165,9 @@ class DashboardPegawaiController extends Controller
             'labelPeriode',
             'sisaCuti',
             'riwayat',
-            'periode' // penting untuk menandai tab aktif di Blade
+            'periode',
+            'masaKerjaTahun',
+            'masaKerjaBulan'
         ));
     }
 }

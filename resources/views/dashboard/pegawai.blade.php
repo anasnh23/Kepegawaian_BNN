@@ -13,6 +13,8 @@
   $riwayat = $riwayat ?? [];
   $nama    = data_get(auth()->user(), 'nama', 'Pegawai');
   $periode = $periode ?? 'bulan_ini';
+  $masaKerjaTahun = $masaKerjaTahun ?? 0;
+  $masaKerjaBulan = $masaKerjaBulan ?? 0;
 @endphp
 
 <style>
@@ -27,7 +29,7 @@
         border-radius:14px; box-shadow:0 10px 26px rgba(0,33,72,.18); transition:.2s; cursor:pointer; }
   .kpi:hover{ transform:translateY(-3px); box-shadow:0 14px 28px rgba(0,33,72,.26); }
   .kpi-title{ font-weight:800; font-size:.9rem; color:var(--bnn-gold); text-transform:uppercase; letter-spacing:.4px; }
-  .kpi-value{ font-weight:800; font-size:2rem; color:#fff; }
+  .kpi-value{ font-weight:800; font-size:1.6rem; color:#fff; }
   .badge-soft{ background:#fff3d6; color:#7a5600; padding:.25rem .5rem; border-radius:8px; font-weight:700; }
   .card-bnn{ border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(16,24,40,.06); }
   .card-bnn .card-header{ background:var(--bnn-navy); color:#fff; font-weight:700; border:0; }
@@ -48,7 +50,7 @@
     </div>
   </div>
 
-  {{-- ===== Filter Periode ala Admin (Bulan Ini | 30 Hari | Semua) ===== --}}
+  {{-- ===== Filter Periode ===== --}}
   <div class="mb-3 d-flex align-items-center period-tabs" style="gap:.5rem;">
     <a href="{{ route('dashboard.pegawai', ['periode'=>'bulan_ini']) }}"
        class="btn btn-sm {{ $periode==='bulan_ini' ? 'btn-primary' : 'btn-outline-primary' }}">
@@ -67,7 +69,7 @@
 
   {{-- ===== KPI ===== --}}
   <div class="row mb-4">
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('presensi.index') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
@@ -78,7 +80,7 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('presensi.index') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
@@ -89,18 +91,33 @@
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('cuti.pegawai') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti Diajukan ({{ $label }})</div>
             <div class="kpi-value">{{ number_format($cutiBln) }}</div>
           </div>
-          <div class="text-right">
-            <i class="fas fa-calendar-alt fa-2x text-warning mr-2"></i>
-            <i class="fas fa-history fa-2x text-warning" title="Riwayat Cuti"
-               onclick="event.stopPropagation();location.href='{{ url('riwayat-cuti') }}'"></i>
+          <i class="fas fa-calendar-alt fa-2x text-warning"></i>
+        </div>
+      </div>
+    </div>
+    {{-- ✅ KPI Masa Kerja --}}
+    <div class="col-md-3 mb-3">
+      <div class="kpi p-3 h-100">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="kpi-title"><i class="fas fa-user-clock mr-2"></i>Masa Kerja</div>
+            <div class="kpi-value">
+              @if($masaKerjaTahun == 0 && $masaKerjaBulan == 0)
+                <span style="font-size:1rem;">Baru Bergabung</span>
+              @else
+                {{ $masaKerjaTahun }}<sup style="font-size:14px;"> th</sup>
+                {{ $masaKerjaBulan }}<sup style="font-size:14px;"> bln</sup>
+              @endif
+            </div>
           </div>
+          <i class="fas fa-briefcase fa-2x text-warning"></i>
         </div>
       </div>
     </div>
