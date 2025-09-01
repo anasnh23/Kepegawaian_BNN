@@ -18,8 +18,6 @@ use App\Http\Controllers\AdminCutiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
-use App\Http\Controllers\ApprovalKgpController;
-
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -97,8 +95,6 @@ Route::middleware(['auth'])->group(function () {
     // Riwayat Gaji
     Route::resource('/riwayat_gaji', RiwayatGajiController::class);
 
-    // ✅ Approval KGB oleh Pimpinan
-    Route::get('/approval-kgb', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
-    Route::post('/approval-kgb/{id}/approve', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
-    Route::post('/approval-kgb/{id}/reject', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
+    
+
 });
