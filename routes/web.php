@@ -18,6 +18,8 @@ use App\Http\Controllers\AdminCutiController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
+use App\Http\Controllers\ApprovalKgpController;
+
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -84,15 +86,19 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/approval-dokumen/update-status', [PimpinanCutiController::class, 'updateStatus']);
 
     // 🔔 NOTIFIKASI
-    Route::get('/notifikasi', [NotifikasiController::class, 'semua'])->name('notifikasi.semua'); // Lihat semua notifikasi
+    Route::get('/notifikasi', [NotifikasiController::class, 'semua'])->name('notifikasi.semua'); 
     Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
-    Route::post('/notifikasi/baca', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.baca'); // Tandai semua
-    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id'); // Klik per notifikasi
+    Route::post('/notifikasi/baca', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.baca');
+    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id'); 
 
-    // jabatan
+    // Jabatan
     Route::resource('/ref_jabatan', RefJabatanController::class);
 
-    //RiwayatGaji
+    // Riwayat Gaji
     Route::resource('/riwayat_gaji', RiwayatGajiController::class);
 
+    // ✅ Approval KGB oleh Pimpinan
+    Route::get('/approval-kgb', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
+    Route::post('/approval-kgb/{id}/approve', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
+    Route::post('/approval-kgb/{id}/reject', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
 });

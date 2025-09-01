@@ -20,46 +20,32 @@
     border-bottom: 3px solid #ffc107;
   }
 
-  .status-info {
-    font-size: 14px;
-    font-weight: 500;
-    margin-top: 8px;
-  }
-
-  .status-success {
-    color: #198754;
-  }
-
-  .status-danger {
-    color: #dc3545;
-  }
+  .status-info { font-size: 14px; font-weight: 500; margin-top: 8px; }
+  .status-success { color: #198754; }
+  .status-danger  { color: #dc3545; }
 
   video {
-    width: 100%;
-    height: 280px;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-    object-fit: cover;
+    width: 100%; height: 280px; border-radius: 8px;
+    border: 1px solid #dee2e6; object-fit: cover;
   }
 
   .btn-presensi {
-    width: 100%;
-    font-size: 16px;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: 600;
-    background-color: #003366;
-    color: #fff;
-    border: none;
-    transition: background 0.3s ease;
+    width: 100%; font-size: 16px; padding: 10px; border-radius: 8px; font-weight: 600;
+    background-color: #003366; color: #fff; border: none; transition: background .3s ease;
   }
+  .btn-presensi:hover { background-color: #002244; }
 
-  .btn-presensi:hover {
-    background-color: #002244;
-  }
+  /* Ringkasan Hari Ini */
+  .thead-bnn th{ background:#0f1f39; color:#eaf2ff; border-color:#0f1f39; }
+  .badge-status{ font-weight:700; border-radius:10px; padding:.35rem .55rem; }
+  .badge-hadir{ background:#e7f6ec; color:#146c2e; border:1px solid #bfe5c8; }
+  .badge-terlambat{ background:#fff7e6; color:#7a4d00; border:1px solid #ffe0ad; }
+  .badge-absen{ background:#fdeaea; color:#842029; border:1px solid #f8c2c7; }
+  .thumb { width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #e6edf6; }
 </style>
 
 <div class="container-fluid">
+  {{-- ====== Kartu Kamera & Lokasi ====== --}}
   <div class="card card-presensi mb-4">
     <div class="card-header card-header-bnn">
       <i class="fas fa-fingerprint mr-2"></i> Presensi Pegawai BNN
@@ -85,10 +71,113 @@
               <i class="fas fa-check-circle"></i> Presensi Sekarang
             </button>
           </form>
+          @isset($config)
+            <div class="small text-muted mt-2">
+              Jam masuk: <b>{{ $config['start'] ?? '08:00:00' }}</b>,
+              toleransi: <b>{{ $config['tol'] ?? '00:15:00' }}</b>,
+              pulang mulai: <b>{{ $config['end'] ?? '16:00:00' }}</b>.
+            </div>
+          @endisset
         </div>
       </div>
     </div>
   </div>
+
+  {{-- ====== RINGKASAN PRESENSI HARI INI ====== --}}
+  <div class="card card-presensi mb-3">
+    <div class="card-header card-header-bnn">
+      <i class="fas fa-clipboard-check mr-2"></i> Presensi Hari Ini — {{ \Carbon\Carbon::parse($today ?? now())->translatedFormat('d M Y') }}
+    </div>
+
+    @if(!empty($todayPresensi))
+      @php
+        $st = strtolower($todayPresensi->status ?? '-');
+        $badgeClass = $st === 'hadir' ? 'badge-hadir' : ($st === 'terlambat' ? 'badge-terlambat' : 'badge-absen');
+        $label = $st === 'tidak hadir' ? 'Tidak Hadir' : ucfirst($st);
+      @endphp
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered m-0">
+            <thead class="text-center thead-bnn">
+              <tr>
+                <th>Jam Masuk</th>
+                <th>Foto Masuk</th>
+                <th>Jam Pulang</th>
+                <th>Foto Pulang</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody class="text-center align-middle">
+              <tr>
+                <td>{{ $todayPresensi->jam_masuk ?? '-' }}</td>
+                <td>
+                  @if($todayPresensi->foto_masuk)
+                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" target="_blank">
+                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" class="thumb" alt="Masuk">
+                    </a>
+                  @else - @endif
+                </td>
+                <td>{{ $todayPresensi->jam_pulang ?? '-' }}</td>
+                <td>
+                  @if($todayPresensi->foto_pulang)
+                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" target="_blank">
+                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" class="thumb" alt="Pulang">
+                    </a>
+                  @else - @endif
+                </td>
+                <td><span class="badge-status {{ $badgeClass }}">{{ $label }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    @else
+      <div class="card-body">
+        <div class="alert alert-info mb-0">
+          Belum ada presensi hari ini. Silakan lakukan presensi masuk.
+        </div>
+      </div>
+    @endif
+  </div>
+
+  {{-- ====== (Opsional) Riwayat 7 Hari Terakhir ====== --}}
+  @if(!empty($recent) && $recent->count())
+  <div class="card card-presensi">
+    <div class="card-header" style="background:#f4f6fa">
+      <strong><i class="fas fa-history mr-2"></i>Riwayat 7 Hari Terakhir</strong>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-striped m-0">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Masuk</th>
+              <th>Pulang</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($recent as $r)
+              @php
+                $st = strtolower($r->status ?? '-');
+                $badge = $st === 'hadir' ? 'badge badge-success'
+                        : ($st === 'terlambat' ? 'badge badge-warning' : 'badge badge-danger');
+                $label = $st === 'tidak hadir' ? 'Tidak Hadir' : ucfirst($st);
+              @endphp
+              <tr>
+                <td>{{ \Carbon\Carbon::parse($r->tanggal)->translatedFormat('d M Y') }}</td>
+                <td>{{ $r->jam_masuk ?? '-' }}</td>
+                <td>{{ $r->jam_pulang ?? '-' }}</td>
+                <td><span class="{{ $badge }}">{{ $label }}</span></td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  @endif
 </div>
 @endsection
 
@@ -106,29 +195,28 @@
 
   const kantorLat = -7.809739;
   const kantorLng = 111.975466;
-  const maxRadius = 0.3;
+  const maxRadius = 0.3; // km
 
   // Akses kamera
   navigator.mediaDevices.getUserMedia({ video: true })
     .then(stream => video.srcObject = stream)
     .catch(err => Swal.fire('Gagal Akses Kamera', err.message, 'error'));
 
-  // Hitung jarak
+  // Hitung jarak (Haversine sederhana)
   function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+              Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); // km
   }
 
   // Peta
   const map = L.map('map').setView([kantorLat, kantorLng], 18);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
+    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map);
 
   L.marker([kantorLat, kantorLng]).addTo(map).bindPopup("Kantor BNN").openPopup();
@@ -179,13 +267,8 @@
 
     axios.post('{{ route("presensi.store") }}', data)
       .then(res => {
-        Swal.fire({
-          icon: 'success',
-          title: 'Presensi Berhasil',
-          text: res.data.message,
-          showConfirmButton: false,
-          timer: 2500
-        });
+        Swal.fire({ icon: 'success', title: 'Presensi Berhasil', text: res.data.message, showConfirmButton: false, timer: 2500 })
+          .then(() => window.location.reload()); // refresh agar tabel "hari ini" update
       })
       .catch(err => {
         Swal.fire('Presensi Gagal', err.response?.data?.message || 'Terjadi kesalahan.', 'error');

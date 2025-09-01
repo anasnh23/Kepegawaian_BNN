@@ -23,6 +23,14 @@
   $valuesPangkat = array_map('intval', $pangkatValues ?? []);
   $lkPct = $total ? round($lk / $total * 100) : 0;
   $prPct = $total ? round($pr / $total * 100) : 0;
+
+  // Favorit pangkat utk kartu
+  $fav = '-';
+  if (!empty($valuesPangkat)) {
+      $maxVal = max($valuesPangkat);
+      $idx = array_search($maxVal, $valuesPangkat);
+      $fav = $labelsPangkat[$idx] ?? '-';
+  }
 @endphp
 
 <style>
@@ -47,13 +55,14 @@
     background: linear-gradient(135deg, var(--bnn-navy), var(--bnn-blue));
     color:#fff; border-left:6px solid var(--bnn-gold); border-radius:12px;
     transition:.25s ease; box-shadow:0 10px 26px rgba(0,33,72,.18);
+    cursor:pointer;
   }
   .kpi-card:hover{ transform: translateY(-3px); box-shadow:0 14px 28px rgba(0,33,72,.26); }
   .kpi-title{ font-weight:800; font-size:.86rem; letter-spacing:.5px; color:var(--bnn-gold); text-transform:uppercase; }
   .kpi-value{ font-weight:800; font-size:2rem; color:#fff; }
   .badge-soft{ background:#fff3d6; color:#7a5600; padding:.25rem .5rem; border-radius:8px; font-weight:700; }
 
-  .card-bnn{ border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(16,24,40,.06); }
+  .card-bnn{ border:1px solid var(--line); border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(16,24,40,.06); cursor:pointer; }
   .card-bnn .card-header{ background: var(--bnn-navy); color:#fff; font-weight:700; border:0; }
 
   .gender-bar{ height:8px; background:#e9eef6; border-radius:999px; overflow:hidden; }
@@ -89,20 +98,20 @@
   {{-- ======= KPI Row 1 ======= --}}
   <div class="row mb-4">
     <div class="col-md-3 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('pegawai.index') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <div class="kpi-title"><i class="fas fa-users mr-2"></i>Total Pegawai</div>
             <div class="kpi-value">{{ number_format($total) }}</div>
           </div>
-          <i class="fas fa-user-friends fa-2x text-warning" title="Lihat Data Pegawai" onclick="window.location.href='{{ route('pegawai.index') }}'"></i>
+          <i class="fas fa-user-friends fa-2x text-warning"></i>
         </div>
         <div class="mt-2 mini-desc">L: {{ $lk }} • P: {{ $pr }}</div>
       </div>
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('pegawai.index') }}?gender=L'">
         <div class="kpi-title"><i class="fas fa-male mr-2"></i>Laki-laki</div>
         <div class="d-flex justify-content-between align-items-end">
           <div class="kpi-value">{{ number_format($lk) }}</div>
@@ -113,7 +122,7 @@
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('pegawai.index') }}?gender=P'">
         <div class="kpi-title"><i class="fas fa-female mr-2"></i>Perempuan</div>
         <div class="d-flex justify-content-between align-items-end">
           <div class="kpi-value">{{ number_format($pr) }}</div>
@@ -124,13 +133,13 @@
     </div>
 
     <div class="col-md-3 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='/kgp'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <div class="kpi-title"><i class="fas fa-chart-line mr-2"></i>Kenaikan Gaji Tahun Ini</div>
             <div class="kpi-value">{{ number_format($kenaikan) }}</div>
           </div>
-          <i class="fas fa-money-bill-wave fa-2x text-warning" title="Kenaikan Gaji Berkala" onclick="window.location.href='/kgp'"></i>
+          <i class="fas fa-money-bill-wave fa-2x text-warning"></i>
         </div>
         <div class="mini-desc mt-2">Pegawai yang mengalami KGB</div>
       </div>
@@ -140,30 +149,22 @@
   {{-- ======= KPI Row 2 ======= --}}
   <div class="row mb-4">
     <div class="col-md-4 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('presensi.admin') }}'">
         <div class="kpi-title"><i class="fas fa-check-circle mr-2"></i>Presensi Hadir ({{ $labelPeriode ?? 'Bulan Ini' }})</div>
         <div class="kpi-value">{{ number_format($hadir) }}</div>
         <div class="mini-desc mt-2">Terlambat: {{ number_format($telat) }} • Tidak Hadir: {{ number_format($tidak) }}</div>
       </div>
     </div>
     <div class="col-md-4 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='/cutiadmin'">
         <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti ({{ $labelPeriode ?? 'Bulan Ini' }})</div>
         <div class="kpi-value">{{ number_format($totalCuti) }}</div>
         <div class="mini-desc mt-2">Total pengajuan cuti dalam periode</div>
       </div>
     </div>
     <div class="col-md-4 mb-3">
-      <div class="kpi-card p-3 h-100">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('pegawai.index') }}'">
         <div class="kpi-title"><i class="fas fa-user-shield mr-2"></i>Golongan Pangkat Terbanyak</div>
-        @php
-          $fav = '-';
-          if (!empty($valuesPangkat)) {
-            $maxVal = max($valuesPangkat);
-            $idx = array_search($maxVal, $valuesPangkat);
-            $fav = $labelsPangkat[$idx] ?? '-';
-          }
-        @endphp
         <div class="kpi-value" style="font-size:1.6rem">{{ $fav }}</div>
         <div class="mini-desc mt-2">Dominan di populasi pegawai</div>
       </div>
@@ -173,19 +174,19 @@
   {{-- ======= Charts ======= --}}
   <div class="row">
     <div class="col-lg-4 mb-4">
-      <div class="card card-bnn h-100">
+      <div class="card card-bnn h-100" onclick="location.href='{{ route('pegawai.index') }}'">
         <div class="card-header"><i class="fas fa-venus-mars mr-2"></i>Komposisi Gender</div>
         <div class="card-body"><canvas id="genderChart" height="240"></canvas></div>
       </div>
     </div>
     <div class="col-lg-4 mb-4">
-      <div class="card card-bnn h-100">
+      <div class="card card-bnn h-100" onclick="location.href='{{ route('presensi.admin') }}'">
         <div class="card-header"><i class="fas fa-chart-bar mr-2"></i>Statistik Presensi ({{ $labelPeriode ?? '' }})</div>
         <div class="card-body"><canvas id="presensiChart" height="240"></canvas></div>
       </div>
     </div>
     <div class="col-lg-4 mb-4">
-      <div class="card card-bnn h-100">
+      <div class="card card-bnn h-100" onclick="location.href='{{ route('pegawai.index') }}'">
         <div class="card-header"><i class="fas fa-user-shield mr-2"></i>Distribusi Golongan Pangkat</div>
         <div class="card-body"><canvas id="pangkatChart" height="240"></canvas></div>
       </div>
@@ -197,41 +198,29 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function(){
-  const C = {
-    navy:'#003366', gold:'#f0ad4e', green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#2c74b3'
-  };
+  const C = { navy:'#003366', gold:'#f0ad4e', green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#2c74b3' };
 
-  // Data dari PHP (dipastikan angka murni)
   const GENDER = { laki: {{ $lk }}, perempuan: {{ $pr }} };
   const PRESENSI = { hadir: {{ $hadir }}, terlambat: {{ $telat }}, tidak: {{ $tidak }} };
   const PANGKAT_LABELS = {!! json_encode(array_values($labelsPangkat), JSON_UNESCAPED_UNICODE) !!};
   const PANGKAT_VALUES = {!! json_encode(array_values($valuesPangkat), JSON_NUMERIC_CHECK) !!};
 
-  // Gender Doughnut
   new Chart(document.getElementById('genderChart').getContext('2d'), {
     type: 'doughnut',
-    data: {
-      labels: ['Laki-laki', 'Perempuan'],
-      datasets: [{ data: [GENDER.laki, GENDER.perempuan], backgroundColor: [C.navy, C.gold], borderColor:'#fff', borderWidth:2 }]
-    },
+    data: { labels: ['Laki-laki', 'Perempuan'], datasets: [{ data: [GENDER.laki, GENDER.perempuan], backgroundColor: [C.navy, C.gold], borderColor:'#fff', borderWidth:2 }] },
     options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:14 } } }, cutout:'62%' }
   });
 
-  // Presensi Bar
   new Chart(document.getElementById('presensiChart').getContext('2d'), {
     type: 'bar',
-    data: {
-      labels: ['Hadir', 'Terlambat', 'Tidak Hadir'],
-      datasets: [{ label:'Jumlah', data:[PRESENSI.hadir, PRESENSI.terlambat, PRESENSI.tidak], backgroundColor:[C.green, C.yellow, C.red], borderRadius:8 }]
-    },
+    data: { labels: ['Hadir', 'Terlambat', 'Tidak Hadir'], datasets: [{ label:'Jumlah', data:[PRESENSI.hadir, PRESENSI.terlambat, PRESENSI.tidak], backgroundColor:[C.green, C.yellow, C.red], borderRadius:8 }] },
     options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, grid:{ color:'#e9eef6' } }, x:{ grid:{ display:false } } } }
   });
 
-  // Pangkat Horizontal
   new Chart(document.getElementById('pangkatChart').getContext('2d'), {
     type: 'bar',
     data: { labels: PANGKAT_LABELS, datasets: [{ label:'Jumlah Pegawai', data: PANGKAT_VALUES, backgroundColor: C.blue, borderRadius:8 }] },
-    options: { indexAxis: 'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, grid:{ color:'#e9eef6' } }, y:{ grid:{ display:false } } } }
+    options: { indexAxis:'y', responsive:true, plugins:{ legend:{ display:false } }, scales:{ x:{ beginAtZero:true, grid:{ color:'#e9eef6' } }, y:{ grid:{ display:false } } } }
   });
 })();
 </script>
