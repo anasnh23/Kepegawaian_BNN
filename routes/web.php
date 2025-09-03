@@ -79,19 +79,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cuti/edit/{id}', [AdminCutiController::class, 'edit'])->name('cuti.edit');
     Route::put('/cuti/update-status/{id}', [AdminCutiController::class, 'updateStatus'])->name('cuti.updateStatus');
 
-    // Approval Dokumen oleh Pimpinan
-    Route::get('/approval-dokumen', [PimpinanCutiController::class, 'index'])->name('approval.dokumen');
-    Route::post('/approval-dokumen/setujui/{id}', [PimpinanCutiController::class, 'approve'])->name('dokumen.setujui');
-    Route::post('/approval-dokumen/tolak/{id}', [PimpinanCutiController::class, 'reject'])->name('dokumen.tolak');
-    Route::get('/riwayat-approval', [PimpinanCutiController::class, 'riwayat'])->name('riwayat.approval');
-    Route::get('/approval-dokumen/edit/{id}', [PimpinanCutiController::class, 'edit'])->name('approval.edit');
-    Route::post('/approval-dokumen/update-status', [PimpinanCutiController::class, 'updateStatus']);
+// Approval Dokumen oleh Pimpinan
+Route::get('/approval-dokumen', [PimpinanCutiController::class, 'index'])->name('approval.dokumen');
+Route::post('/approval-dokumen/setujui/{id}', [PimpinanCutiController::class, 'approve'])->name('dokumen.setujui');
+Route::post('/approval-dokumen/tolak/{id}', [PimpinanCutiController::class, 'reject'])->name('dokumen.tolak');
+Route::get('/riwayat-approval', [PimpinanCutiController::class, 'riwayat'])->name('riwayat.approval');
 
-    // 🔔 NOTIFIKASI
-    Route::get('/notifikasi', [NotifikasiController::class, 'semua'])->name('notifikasi.semua'); 
-    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
-    Route::post('/notifikasi/baca', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.baca');
-    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id'); 
+// Tambahan untuk edit & update
+Route::get('/approval-dokumen/{id}/edit', [PimpinanCutiController::class, 'edit'])->name('approval.edit');
+Route::put('/approval-dokumen/{id}/update-status', [PimpinanCutiController::class, 'updateStatus'])->name('approval.updateStatus');
+
+
+// 🔔 NOTIFIKASI
+// 🔔 NOTIFIKASI
+Route::prefix('notifikasi')->group(function () {
+    Route::get('/', [NotifikasiController::class, 'semua'])->name('notifikasi.semua');
+    Route::get('/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
+    Route::post('/tandai-semua', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.tandaiSemua');
+});
+
 
     // Jabatan
     Route::resource('/ref_jabatan', RefJabatanController::class);

@@ -56,7 +56,7 @@ body { background:#f4f6f9; }
 .badge { font-size:.8rem; font-weight:600; padding:.45em .75em; }
 
 /* Action buttons */
-.btn-action { border-radius:6px; font-size:.8rem; padding:.35rem .6rem; }
+.btn-action { border-radius:6px; font-size:.8rem; padding:.35rem .6rem; margin:2px; }
 </style>
 
 <div class="container-fluid">
@@ -133,9 +133,10 @@ body { background:#f4f6f9; }
                   @endif
                 </td>
                 <td>
-                  @if(!$approval || $approval->status == 'Menunggu')
-                    <button onclick="setujui({{ $approval->id }})" class="btn btn-success btn-action"><i class="fas fa-check"></i></button>
-                    <button onclick="tolak({{ $approval->id }})" class="btn btn-danger btn-action"><i class="fas fa-times"></i></button>
+                  @if(!$approval || !$approval->status || strtolower($approval->status) == 'menunggu')
+                    <button onclick="setujui({{ $approval->id }})" class="btn btn-success btn-action" title="Setujui"><i class="fas fa-check"></i></button>
+                    <button onclick="tolak({{ $approval->id }})" class="btn btn-danger btn-action" title="Tolak"><i class="fas fa-times"></i></button>
+                    <a href="{{ route('approval.edit', $approval->id) }}" class="btn btn-warning btn-action" title="Edit"><i class="fas fa-edit"></i></a>
                   @else
                     <span class="text-muted">Selesai</span>
                   @endif
