@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class PimpinanCutiController extends Controller
 {
     /**
-     * Halaman utama approval dokumen cuti
+     * Halaman utama approval dokumen cuti (yang masih menunggu).
      */
     public function index()
     {
@@ -25,7 +25,7 @@ class PimpinanCutiController extends Controller
 
         $breadcrumb = (object) [
             'title' => 'Persetujuan Dokumen Cuti',
-            'list' => ['Dashboard', 'Approval Dokumen']
+            'list'  => ['Dashboard', 'Approval Dokumen']
         ];
 
         return view('pimpinan.approval-dokumen', compact('cuti', 'breadcrumb'))
@@ -33,7 +33,23 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Menyetujui dokumen cuti
+     * Form edit status approval pimpinan.
+     */
+    public function edit($id)
+    {
+        $approval = ApprovalPimpinan::with('cuti.pegawai')->findOrFail($id);
+
+        $breadcrumb = (object) [
+            'title' => 'Ubah Status Approval',
+            'list'  => ['Dashboard', 'Approval Dokumen', 'Ubah Status']
+        ];
+
+        return view('pimpinan.edit-approval', compact('approval', 'breadcrumb'))
+            ->with('activeMenu', 'approval-dokumen');
+    }
+
+    /**
+     * Menyetujui dokumen cuti.
      */
     public function approve($id)
     {
@@ -54,7 +70,7 @@ class PimpinanCutiController extends Controller
         $cuti->updated_at = now();
         $cuti->save();
 
-        // ✅ Kirim notifikasi ke pegawai
+        // 🔔 Kirim notifikasi ke pegawai
         NotifikasiHelper::send(
             $cuti->id_user,
             'cuti',
@@ -66,7 +82,7 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Menolak dokumen cuti
+     * Menolak dokumen cuti.
      */
     public function reject($id)
     {
@@ -87,7 +103,7 @@ class PimpinanCutiController extends Controller
         $cuti->updated_at = now();
         $cuti->save();
 
-        // ✅ Notifikasi ke pegawai (opsional)
+        // 🔔 Kirim notifikasi ke pegawai
         NotifikasiHelper::send(
             $cuti->id_user,
             'cuti',
@@ -99,7 +115,7 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Riwayat approval dokumen cuti
+     * Riwayat approval dokumen cuti (yang sudah diproses).
      */
     public function riwayat()
     {
@@ -113,7 +129,7 @@ class PimpinanCutiController extends Controller
 
         $breadcrumb = (object) [
             'title' => 'Riwayat Persetujuan Dokumen',
-            'list' => ['Dashboard', 'Riwayat Approval']
+            'list'  => ['Dashboard', 'Riwayat Approval']
         ];
 
         return view('pimpinan.riwayat-approval', compact('cuti', 'breadcrumb'))
@@ -121,17 +137,15 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Update status approval via AJAX
+     * Update status approval via form (edit).
      */
-    public function updateStatus(Request $request)
+    public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'id' => 'required|exists:approval_pimpinan,id',
-            'status' => 'required|in:Disetujui,Ditolak',
+            'status' => 'required|in:Menunggu,Disetujui,Ditolak',
         ]);
 
-        $approval = ApprovalPimpinan::findOrFail($request->id);
-
+        $approval = ApprovalPimpinan::findOrFail($id);
         $approval->status = $request->status;
         $approval->approved_by = Auth::user()->id_user;
         $approval->updated_at = now();
@@ -144,11 +158,13 @@ class PimpinanCutiController extends Controller
             $cuti->updated_at = now();
             $cuti->save();
 
-            // ✅ Notifikasi ke pegawai
-            $pesan = $request->status === 'Disetujui'
-                ? 'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.'
-                : 'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.';
+            $pesan = match($request->status) {
+                'Disetujui' => 'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.',
+                'Ditolak'   => 'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.',
+                default     => 'Dokumen cuti Anda masih <strong>menunggu persetujuan</strong>.'
+            };
 
+            // 🔔 Kirim notifikasi ke pegawai
             NotifikasiHelper::send(
                 $cuti->id_user,
                 'cuti',
@@ -157,6 +173,6 @@ class PimpinanCutiController extends Controller
             );
         }
 
-        return response()->json(['message' => 'Status berhasil diperbarui.']);
+        return redirect()->route('approval.dokumen')->with('success', 'Status cuti berhasil diperbarui.');
     }
 }

@@ -19,6 +19,9 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
 use App\Http\Controllers\ApprovalKgpController;
+use App\Http\Controllers\PresensiDinasController;
+
+
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -76,19 +79,25 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cuti/edit/{id}', [AdminCutiController::class, 'edit'])->name('cuti.edit');
     Route::put('/cuti/update-status/{id}', [AdminCutiController::class, 'updateStatus'])->name('cuti.updateStatus');
 
-    // Approval Dokumen oleh Pimpinan
-    Route::get('/approval-dokumen', [PimpinanCutiController::class, 'index'])->name('approval.dokumen');
-    Route::post('/approval-dokumen/setujui/{id}', [PimpinanCutiController::class, 'approve'])->name('dokumen.setujui');
-    Route::post('/approval-dokumen/tolak/{id}', [PimpinanCutiController::class, 'reject'])->name('dokumen.tolak');
-    Route::get('/riwayat-approval', [PimpinanCutiController::class, 'riwayat'])->name('riwayat.approval');
-    Route::get('/approval-dokumen/edit/{id}', [PimpinanCutiController::class, 'edit'])->name('approval.edit');
-    Route::post('/approval-dokumen/update-status', [PimpinanCutiController::class, 'updateStatus']);
+// Approval Dokumen oleh Pimpinan
+Route::get('/approval-dokumen', [PimpinanCutiController::class, 'index'])->name('approval.dokumen');
+Route::post('/approval-dokumen/setujui/{id}', [PimpinanCutiController::class, 'approve'])->name('dokumen.setujui');
+Route::post('/approval-dokumen/tolak/{id}', [PimpinanCutiController::class, 'reject'])->name('dokumen.tolak');
+Route::get('/riwayat-approval', [PimpinanCutiController::class, 'riwayat'])->name('riwayat.approval');
 
-    // 🔔 NOTIFIKASI
-    Route::get('/notifikasi', [NotifikasiController::class, 'semua'])->name('notifikasi.semua'); 
-    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
-    Route::post('/notifikasi/baca', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.baca');
-    Route::get('/notifikasi/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id'); 
+// Tambahan untuk edit & update
+Route::get('/approval-dokumen/{id}/edit', [PimpinanCutiController::class, 'edit'])->name('approval.edit');
+Route::put('/approval-dokumen/{id}/update-status', [PimpinanCutiController::class, 'updateStatus'])->name('approval.updateStatus');
+
+
+// 🔔 NOTIFIKASI
+// 🔔 NOTIFIKASI
+Route::prefix('notifikasi')->group(function () {
+    Route::get('/', [NotifikasiController::class, 'semua'])->name('notifikasi.semua');
+    Route::get('/{id}/baca', [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
+    Route::post('/tandai-semua', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.tandaiSemua');
+});
+
 
     // Jabatan
     Route::resource('/ref_jabatan', RefJabatanController::class);
@@ -96,10 +105,15 @@ Route::middleware(['auth'])->group(function () {
     // Riwayat Gaji
     Route::resource('/riwayat_gaji', RiwayatGajiController::class);
 
-     Route::get('/approval-kgp', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
-    Route::post('/approval-kgp/{id}/approve', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
-    Route::post('/approval-kgp/{id}/reject', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
+    Route::get('/approval-kgp', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
+Route::post('/approval/kgb/approve/{id}', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
+Route::post('/approval/kgb/reject/{id}', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
 
 
-
+Route::get('/presensi-dinas', [PresensiDinasController::class, 'index'])->name('presensi.dinas');
+Route::post('/presensi-dinas/store', [PresensiDinasController::class, 'store'])->name('presensi.dinas.store');
 });
+
+
+
+

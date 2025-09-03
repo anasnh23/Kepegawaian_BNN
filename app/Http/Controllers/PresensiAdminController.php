@@ -55,8 +55,6 @@ class PresensiAdminController extends Controller
 
         // ==========================================================
         // 2) Backfill "Tidak hadir" utk semua pegawai (anti-duplikasi)
-        //    - HANYA utk tanggal kerja yang SUDAH melewati cut-off
-        //    - Hanya isi created_at (tabel tidak punya updated_at)
         // ==========================================================
         $this->backfillTidakHadir($dates);
 
@@ -79,6 +77,16 @@ class PresensiAdminController extends Controller
         }
 
         $data = $q->get();
+
+        // =========================
+        // 3b) Konversi koordinat ke alamat
+        // =========================
+        foreach ($data as $row) {
+            if (!$row->lokasi && $row->lat_masuk && $row->long_masuk) {
+                $row->lokasi = $this->getAddressFromCoordinates($row->lat_masuk, $row->long_masuk)
+                               ?? ($row->lat_masuk.', '.$row->long_masuk);
+            }
+        }
 
         // =========================
         // 4) Export
@@ -107,99 +115,78 @@ class PresensiAdminController extends Controller
     }
 
     /**
-     * Backfill presensi "Tidak hadir" untuk setiap pegawai pada daftar tanggal.
-     * - Hanya tanggal kerja yang sudah melewati cut-off (dan bukan tanggal masa depan)
-     * - Anti-duplikasi berdasarkan (id_user, tanggal)
-     * - Menulis hanya created_at (tabel tidak punya updated_at)
-     *
-     * @param  string[] $dates  format 'Y-m-d'
-     * @return void
+     * Backfill presensi "Tidak hadir"
      */
-// di atas class / method index pastikan pakai Carbon & env yang sama
+    protected function backfillTidakHadir(array $dates): void
+    {
+        if (empty($dates)) return;
 
-/**
- * Backfill presensi "Tidak hadir" hanya untuk tanggal kerja yang sudah lewat:
- * - Jika tanggal == hari ini dan sekarang < PRESENSI_CUTOFF → SKIP
- * - Anti duplikasi
- * - Hanya isi created_at (tabel tidak punya updated_at)
- */
-protected function backfillTidakHadir(array $dates): void
-{
-    if (empty($dates)) return;
+        $tz        = 'Asia/Jakarta';
+        $now       = \Carbon\Carbon::now($tz);
+        $today     = $now->toDateString();
+        $cutoffStr = env('PRESENSI_CUTOFF', '17:00:00');
+        $cutoff    = \Carbon\Carbon::parse($today . ' ' . $cutoffStr, $tz);
 
-    $tz        = 'Asia/Jakarta';
-    $now       = \Carbon\Carbon::now($tz);
-    $today     = $now->toDateString();
-    $cutoffStr = env('PRESENSI_CUTOFF', '17:00:00');
-    $cutoff    = \Carbon\Carbon::parse($today . ' ' . $cutoffStr, $tz);
+        $userIds = \App\Models\MUser::pluck('id_user')->all();
+        if (empty($userIds)) return;
 
-    // ambil semua user aktif
-    $userIds = \App\Models\MUser::pluck('id_user')->all();
-    if (empty($userIds)) return;
+        foreach (array_chunk($dates, 31) as $datesChunk) {
+            foreach (array_chunk($userIds, 500) as $usersChunk) {
+                $effectiveDates = array_values(array_filter($datesChunk, function ($d) use ($today, $now, $cutoff) {
+                    if ($d === $today && $now->lt($cutoff)) {
+                        return false;
+                    }
+                    return true;
+                }));
+                if (empty($effectiveDates)) continue;
 
-    foreach (array_chunk($dates, 31) as $datesChunk) {
-        foreach (array_chunk($userIds, 500) as $usersChunk) {
+                $existingPairs = \App\Models\PresensiModel::whereIn('tanggal', $effectiveDates)
+                    ->whereIn('id_user', $usersChunk)
+                    ->get(['id_user', 'tanggal'])
+                    ->map(fn($r) => $r->id_user . '|' . \Carbon\Carbon::parse($r->tanggal)->toDateString())
+                    ->all();
 
-            // filter di level tanggal: jangan backfill HARI INI sebelum cutoff
-            $effectiveDates = array_values(array_filter($datesChunk, function ($d) use ($today, $now, $cutoff) {
-                if ($d === $today && $now->lt($cutoff)) {
-                    return false; // skip hari ini sebelum cutoff
-                }
-                return true;
-            }));
-            if (empty($effectiveDates)) continue;
+                $existingSet = array_flip($existingPairs);
 
-            $existingPairs = \App\Models\PresensiModel::whereIn('tanggal', $effectiveDates)
-                ->whereIn('id_user', $usersChunk)
-                ->get(['id_user', 'tanggal'])
-                ->map(fn($r) => $r->id_user . '|' . \Carbon\Carbon::parse($r->tanggal)->toDateString())
-                ->all();
+                $rows = [];
+                $nowCreated = now();
 
-            $existingSet = array_flip($existingPairs);
-
-            $rows = [];
-            $nowCreated = now(); // pakai timezone server
-
-            foreach ($effectiveDates as $d) {
-                foreach ($usersChunk as $uid) {
-                    $key = $uid . '|' . $d;
-                    if (!isset($existingSet[$key])) {
-                        $rows[] = [
-                            'id_user'     => $uid,
-                            'tanggal'     => $d,
-                            'status'      => 'tidak hadir',
-                            'jam_masuk'   => null,
-                            'jam_pulang'  => null,
-                            'foto_masuk'  => null,
-                            'foto_pulang' => null,
-                            'lat_masuk'   => null,
-                            'long_masuk'  => null,
-                            'lat_pulang'  => null,
-                            'long_pulang' => null,
-                            'created_at'  => $nowCreated,
-                        ];
+                foreach ($effectiveDates as $d) {
+                    foreach ($usersChunk as $uid) {
+                        $key = $uid . '|' . $d;
+                        if (!isset($existingSet[$key])) {
+                            $rows[] = [
+                                'id_user'     => $uid,
+                                'tanggal'     => $d,
+                                'status'      => 'tidak hadir',
+                                'jam_masuk'   => null,
+                                'jam_pulang'  => null,
+                                'foto_masuk'  => null,
+                                'foto_pulang' => null,
+                                'lat_masuk'   => null,
+                                'long_masuk'  => null,
+                                'lat_pulang'  => null,
+                                'long_pulang' => null,
+                                'created_at'  => $nowCreated,
+                            ];
+                        }
                     }
                 }
-            }
 
-            if (!empty($rows)) {
-                DB::table('presensi')->insert($rows);
-                // jika sudah ada UNIQUE KEY (id_user, tanggal) bisa ganti:
-                // \DB::table('presensi')->insertOrIgnore($rows);
+                if (!empty($rows)) {
+                    DB::table('presensi')->insert($rows);
+                }
             }
         }
     }
-}
-
 
     // =========================
-    // Helpers (jam & hari kerja)
+    // Helpers
     // =========================
 
     /** Hari kerja Senin–Jumat */
     protected function isWorkday(Carbon $date): bool
     {
-        // 1=Mon .. 7=Sun
         return in_array($date->dayOfWeekIso, [1,2,3,4,5], true);
     }
 
@@ -218,5 +205,26 @@ protected function backfillTidakHadir(array $dates): void
             if ($this->isWorkday($d)) $dates[] = $d->toDateString();
         }
         return $dates;
+    }
+
+    /** Reverse geocoding dari lat/lon ke alamat */
+    private function getAddressFromCoordinates(float $lat, float $lng): ?string
+    {
+        try {
+            $url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={$lat}&lon={$lng}&zoom=18&addressdetails=1";
+            $opts = [
+                "http" => [
+                    "header" => "User-Agent: BNN-Presensi-App/1.0\r\n"
+                ]
+            ];
+            $context = stream_context_create($opts);
+            $response = @file_get_contents($url, false, $context);
+            if (!$response) return null;
+
+            $json = json_decode($response, true);
+            return $json['display_name'] ?? null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

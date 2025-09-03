@@ -46,6 +46,7 @@ class DashboardAdminController extends Controller
             'hadir'       => $norm['hadir']        ?? 0,
             'terlambat'   => $norm['terlambat']    ?? 0,
             'tidak hadir' => $norm['tidak hadir']  ?? 0,
+            'dinas_luar'  => $norm['dinas luar']   ?? 0,   // ✅ tambahan
         ];
 
         // ====== CUTI (pakai tanggal_pengajuan, ganti ke tanggal_mulai bila perlu) ======
@@ -76,8 +77,8 @@ class DashboardAdminController extends Controller
             ->pluck('jumlah','gol')
             ->toArray();
 
-        $golonganPangkat = $gp;                                // map untuk card/info lain
-        $pangkatLabels   = array_values(array_keys($gp));       // labels untuk Chart.js
+        $golonganPangkat = $gp;                                
+        $pangkatLabels   = array_values(array_keys($gp));       
         $pangkatValues   = array_values(array_map('intval',$gp));
 
         // ====== KENAIKAN GAJI (KGP) TAHUN INI ======

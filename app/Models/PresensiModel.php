@@ -15,7 +15,8 @@ class PresensiModel extends Model
         'jam_masuk', 'foto_masuk', 'lat_masuk', 'long_masuk',
         'jam_pulang', 'foto_pulang', 'lat_pulang', 'long_pulang',
         'status',
-        'created_at', // <-- tambahkan ini kalau kamu isi created_at manual
+        'lokasi',      // <-- tambahkan ini
+        'created_at',  // tetap biar bisa diisi manual
     ];
 
     public function user()

@@ -1,8 +1,8 @@
 @extends('layouts.template')
 @section('content')
 
-{{-- Riwayat Cuti — BNN Premier (polish v2) --}}
-{{-- Nuansa BNN: Navy #003366 & Gold #FFC107. Fitur: filter cepat, export CSV, tabel lengket, dan status pill. --}}
+{{-- Riwayat Cuti — BNN Premier (polish v3) --}}
+{{-- Nuansa BNN: Navy #003366 & Gold #FFC107. Fitur: filter cepat, export CSV dinamis, tabel lengket, status pill dengan tooltip. --}}
 
 @push('styles')
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
@@ -29,7 +29,7 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M4 6l4 4 4-4' stroke='%23003366' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right .8rem center; background-size:16px; padding-right:2.2rem;
   }
-  input[type=date]::-webkit-calendar-picker-indicator{ padding:.2rem; } /* date icon spacing */
+  input[type=date]::-webkit-calendar-picker-indicator{ padding:.2rem; }
 
   /* Tabel */
   .table thead th{ position:sticky; top:0; background:#0c3b72; color:#fff; z-index:1; vertical-align:middle; }
@@ -51,10 +51,8 @@
   .legend i{ width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:.4rem; }
   .lg-acc{ background:#2ecc71; } .lg-rej{ background:#e74c3c; } .lg-pend{ background:#f39c12; } .lg-info{ background:#3498db; }
 
-  /* Info jumlah baris */
   .result-info{ color:#334e77; font-weight:600; }
 
-  /* Responsif tombol reset full width di mobile */
   @media (max-width: 576px){
     #btnReset{ width:100%; }
   }
@@ -99,13 +97,12 @@
             <label class="mb-1"><strong>Status</strong></label>
             <select id="statusFilter" class="custom-select">
               <option value="">Semua Status</option>
-              <option>Disetujui</option>
-              <option>Ditolak</option>
-              <option>Menunggu</option>
+              <option value="disetujui">Disetujui</option>
+              <option value="ditolak">Ditolak</option>
+              <option value="menunggu">Menunggu</option>
             </select>
           </div>
 
-          <!-- Rentang tanggal diperlebar + spacing -->
           <div class="form-group col-md-4">
             <label class="mb-1"><strong>Rentang Tanggal Pengajuan</strong></label>
             <div class="d-flex align-items-center">
@@ -115,7 +112,6 @@
             </div>
           </div>
 
-          <!-- Tombol reset auto width, dorong ke kanan -->
           <div class="form-group col-auto ml-auto">
             <button class="btn btn-bnn" id="btnReset"><i class="fas fa-undo"></i> Reset</button>
           </div>
@@ -149,7 +145,7 @@
               </thead>
               <tbody>
                 @forelse($cuti as $item)
-                <tr data-status="{{ $item->status }}" data-date="{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('Y-m-d') }}">
+                <tr data-status="{{ strtolower($item->status) }}" data-date="{{ \Carbon\Carbon::parse($item->tanggal_pengajuan)->format('Y-m-d') }}">
                   <td class="text-center">{{ $loop->iteration }}</td>
                   <td>{{ $item->pegawai->nama ?? '-' }}</td>
                   <td>{{ $item->pegawai->nip ?? '-' }}</td>
@@ -160,11 +156,11 @@
                   <td class="text-left">{{ $item->keterangan ?? '-' }}</td>
                   <td class="text-center">
                     @if($item->status == 'Disetujui')
-                      <span class="status-pill pill-acc"><i class="fas fa-check-circle"></i> Disetujui</span>
+                      <span class="status-pill pill-acc" title="Cuti disetujui"><i class="fas fa-check-circle"></i> Disetujui</span>
                     @elseif($item->status == 'Ditolak')
-                      <span class="status-pill pill-rej"><i class="fas fa-times-circle"></i> Ditolak</span>
+                      <span class="status-pill pill-rej" title="Cuti ditolak"><i class="fas fa-times-circle"></i> Ditolak</span>
                     @else
-                      <span class="status-pill pill-pend"><i class="fas fa-hourglass-half"></i> Menunggu</span>
+                      <span class="status-pill pill-pend" title="Menunggu persetujuan"><i class="fas fa-hourglass-half"></i> Menunggu</span>
                     @endif
                   </td>
                   <td class="text-center">
@@ -210,23 +206,23 @@
                       @if($approval && $approval->dokumen_path)
                         <a href="{{ asset('storage/' . $approval->dokumen_path) }}" target="_blank" class="btn btn-sm btn-bnn-primary"><i class="fas fa-file-pdf"></i> Lihat</a>
                       @else
-                        <span class="status-pill pill-info"><i class="fas fa-info-circle"></i> Belum Upload</span>
+                        <span class="status-pill pill-info" title="Belum ada dokumen diupload"><i class="fas fa-info-circle"></i> Belum Upload</span>
                       @endif
                     </td>
                     <td class="text-center">
                       @if($approval && $approval->dokumen_path)
-                        <span class="status-pill pill-info"><i class="fas fa-paper-plane"></i> Terkirim</span>
+                        <span class="status-pill pill-info" title="Dokumen terkirim"><i class="fas fa-paper-plane"></i> Terkirim</span>
                       @else
-                        <span class="status-pill pill-pend"><i class="fas fa-hourglass-half"></i> Belum</span>
+                        <span class="status-pill pill-pend" title="Belum dikirim"><i class="fas fa-hourglass-half"></i> Belum</span>
                       @endif
                     </td>
                     <td class="text-center">
                       @if($approval && $approval->status == 'Disetujui')
-                        <span class="status-pill pill-acc"><i class="fas fa-check-circle"></i> Disetujui</span>
+                        <span class="status-pill pill-acc" title="Disetujui pimpinan"><i class="fas fa-check-circle"></i> Disetujui</span>
                       @elseif($approval && $approval->status == 'Ditolak')
-                        <span class="status-pill pill-rej"><i class="fas fa-times-circle"></i> Ditolak</span>
+                        <span class="status-pill pill-rej" title="Ditolak pimpinan"><i class="fas fa-times-circle"></i> Ditolak</span>
                       @else
-                        <span class="status-pill pill-pend"><i class="fas fa-hourglass-half"></i> Menunggu</span>
+                        <span class="status-pill pill-pend" title="Menunggu keputusan pimpinan"><i class="fas fa-hourglass-half"></i> Menunggu</span>
                       @endif
                     </td>
                   </tr>
@@ -245,7 +241,6 @@
 
 @push('scripts')
 <script>
-  // ===== Client-side filters (admin table) =====
   const searchInput = document.getElementById('searchInput');
   const statusFilter = document.getElementById('statusFilter');
   const dateFrom = document.getElementById('dateFrom');
@@ -275,10 +270,10 @@
 
   function filterRows(){
     const q = (searchInput.value||'').toLowerCase();
-    const st = statusFilter.value;
+    const st = (statusFilter.value||'').toLowerCase();
     [...tableAdmin.rows].forEach(r=>{
       const text = r.innerText.toLowerCase();
-      const rowStatus = r.getAttribute('data-status') || '';
+      const rowStatus = (r.getAttribute('data-status')||'').toLowerCase();
       const rowDate = r.getAttribute('data-date') || '';
       const matchText = q==='' || text.includes(q);
       const matchStatus = st==='' || rowStatus===st;
@@ -288,7 +283,6 @@
     updateResultInfo();
   }
 
-  // debounce kecil untuk pencarian
   function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn.apply(this,args), ms); }; }
   const debouncedFilter = debounce(filterRows, 180);
 
@@ -300,10 +294,9 @@
     e.preventDefault(); searchInput.value=''; statusFilter.value=''; dateFrom.value=''; dateTo.value=''; filterRows();
   });
 
-  // init info
   updateResultInfo();
 
-  // ===== Export visible rows to CSV =====
+  // Export visible rows to CSV dengan nama file dinamis
   function exportCsv(tableSelector){
     const table = document.querySelector(tableSelector);
     const rows = [...table.querySelectorAll('tr')].filter(r => r.style.display !== 'none');
@@ -311,7 +304,9 @@
     const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url; a.download = 'riwayat-cuti-admin.csv'; a.click();
+    const now = new Date().toISOString().slice(0,10);
+    a.href = url; a.download = `riwayat-cuti-admin-${now}.csv`;
+    a.click();
     URL.revokeObjectURL(url);
   }
   document.getElementById('btnExportCsv').addEventListener('click', function(){ exportCsv('#tableAdmin'); });
