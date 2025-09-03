@@ -41,6 +41,15 @@
           <p>Presensi Pegawai</p>
         </a>
       </li>
+
+      {{-- Tambahan Submenu Presensi Dinas Luar --}}
+      <li class="nav-item">
+        <a href="{{ url('/presensi-dinas') }}" class="nav-link {{ $activeMenu == 'presensi-dinas' ? 'active' : '' }}">
+          <i class="fas fa-map-marked-alt nav-icon text-warning"></i>
+          <p>Presensi Dinas Luar</p>
+        </a>
+      </li>
+
       <li class="nav-item">
         <a href="{{ url('/cutipegawai') }}" class="nav-link {{ $activeMenu == 'cuti' ? 'active' : '' }}">
           <i class="fas fa-calendar-check nav-icon text-primary"></i>

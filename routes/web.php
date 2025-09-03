@@ -19,6 +19,9 @@ use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
 use App\Http\Controllers\ApprovalKgpController;
+use App\Http\Controllers\PresensiDinasController;
+
+
 // Redirect root
 Route::get('/', function () {
     if (Auth::check()) return redirect('/dashboard');
@@ -96,10 +99,15 @@ Route::middleware(['auth'])->group(function () {
     // Riwayat Gaji
     Route::resource('/riwayat_gaji', RiwayatGajiController::class);
 
-     Route::get('/approval-kgp', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
-    Route::post('/approval-kgp/{id}/approve', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
-    Route::post('/approval-kgp/{id}/reject', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
+    Route::get('/approval-kgp', [ApprovalKgpController::class, 'index'])->name('approval.kgb');
+Route::post('/approval/kgb/approve/{id}', [ApprovalKgpController::class, 'approve'])->name('approval.kgb.approve');
+Route::post('/approval/kgb/reject/{id}', [ApprovalKgpController::class, 'reject'])->name('approval.kgb.reject');
 
 
-
+Route::get('/presensi-dinas', [PresensiDinasController::class, 'index'])->name('presensi.dinas');
+Route::post('/presensi-dinas/store', [PresensiDinasController::class, 'store'])->name('presensi.dinas.store');
 });
+
+
+
+

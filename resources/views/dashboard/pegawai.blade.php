@@ -7,6 +7,7 @@
   $hadir   = (int) data_get($stats, 'hadir', 0);
   $telat   = (int) data_get($stats, 'terlambat', 0);
   $absen   = (int) data_get($stats, 'tidak hadir', 0);
+  $dinas   = (int) data_get($stats, 'dinas_luar', 0); 
   $cutiBln = (int) ($cutiStats ?? 0);
   $sisa    = (int) ($sisaCuti ?? 0);
   $label   = $labelPeriode ?? 'Bulan Ini';
@@ -19,7 +20,8 @@
 
 <style>
   :root{ --bnn-navy:#003366; --bnn-navy-2:#0b2f5e; --bnn-blue:#144272; --bnn-gold:#f0ad4e;
-         --soft:#eef3fb; --ink:#0f172a; --line:#e6edf6; --green:#28a745; --yellow:#ffc107; --red:#dc3545; }
+         --soft:#eef3fb; --ink:#0f172a; --line:#e6edf6;
+         --green:#28a745; --yellow:#ffc107; --red:#dc3545; --blue:#007bff; }
   .dash-hero{ background:linear-gradient(135deg,var(--bnn-navy),#012148 60%,var(--bnn-navy-2));
               color:#fff;border-radius:16px;padding:16px 18px;position:relative;overflow:hidden;
               box-shadow:0 12px 28px rgba(0,33,72,.22); }
@@ -73,7 +75,7 @@
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('presensi.index') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <div class="kpi-title"><i class="fas fa-user-check mr-2"></i>Hadir ({{ $label }})</div>
+            <div class="kpi-title"><i class="fas fa-user-check mr-2"></i>Hadir</div>
             <div class="kpi-value">{{ number_format($hadir) }}</div>
           </div>
           <i class="fas fa-calendar-check fa-2x text-warning"></i>
@@ -84,7 +86,7 @@
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('presensi.index') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <div class="kpi-title"><i class="fas fa-clock mr-2"></i>Terlambat ({{ $label }})</div>
+            <div class="kpi-title"><i class="fas fa-clock mr-2"></i>Terlambat</div>
             <div class="kpi-value">{{ number_format($telat) }}</div>
           </div>
           <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
@@ -95,14 +97,28 @@
       <div class="kpi p-3 h-100" onclick="location.href='{{ route('cuti.pegawai') }}'">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti Diajukan ({{ $label }})</div>
+            <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti</div>
             <div class="kpi-value">{{ number_format($cutiBln) }}</div>
           </div>
           <i class="fas fa-calendar-alt fa-2x text-warning"></i>
         </div>
       </div>
     </div>
-    {{-- ✅ KPI Masa Kerja --}}
+    <div class="col-md-3 mb-3">
+      <div class="kpi p-3 h-100" onclick="location.href='{{ route('presensi.dinas') }}'">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <div class="kpi-title"><i class="fas fa-car-side mr-2"></i>Dinas Luar</div>
+            <div class="kpi-value">{{ number_format($dinas) }}</div>
+          </div>
+          <i class="fas fa-car fa-2x text-info"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ===== KPI Masa Kerja (row kedua) ===== --}}
+  <div class="row mb-4">
     <div class="col-md-3 mb-3">
       <div class="kpi p-3 h-100">
         <div class="d-flex justify-content-between align-items-center">
@@ -127,7 +143,7 @@
   <div class="row">
     <div class="col-lg-6 mb-4">
       <div class="card card-bnn h-100">
-        <div class="card-header"><i class="fas fa-chart-bar mr-2"></i>Statistik Presensi ({{ $label }})</div>
+        <div class="card-header"><i class="fas fa-chart-bar mr-2"></i>Statistik Presensi</div>
         <div class="card-body">
           <canvas id="presensiBar" height="220"></canvas>
         </div>
@@ -152,7 +168,7 @@
         <table class="table table-hover text-sm m-0">
           <thead class="text-center">
             <tr>
-              <th style="width:60px">#</th>
+              <th>#</th>
               <th>Tanggal</th>
               <th>Jam Masuk</th>
               <th>Jam Pulang</th>
@@ -167,8 +183,11 @@
                 <td>{{ $row->jam_masuk ?? '-' }}</td>
                 <td>{{ $row->jam_pulang ?? '-' }}</td>
                 <td class="text-center">
-                  <span class="badge {{ $row->status=='hadir'?'badge-success':($row->status=='terlambat'?'badge-warning':'badge-danger') }}">
-                    {{ ucfirst($row->status) }}
+                  <span class="badge 
+                    {{ $row->status=='hadir'?'badge-success':
+                       ($row->status=='terlambat'?'badge-warning':
+                       ($row->status=='dinas_luar'?'badge-info':'badge-danger')) }}">
+                    {{ ucfirst(str_replace('_',' ',$row->status)) }}
                   </span>
                 </td>
               </tr>
@@ -186,14 +205,23 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function(){
-  const DATA = { hadir: {{ $hadir }}, terlambat: {{ $telat }}, absen: {{ $absen }} };
-  const C = { green:'#28a745', yellow:'#ffc107', red:'#dc3545' };
+  const DATA = { 
+    hadir: {{ $hadir }}, 
+    terlambat: {{ $telat }}, 
+    absen: {{ $absen }}, 
+    dinas: {{ $dinas }}
+  };
+  const C = { green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#007bff' };
 
   new Chart(document.getElementById('presensiBar'), {
     type:'bar',
     data:{
-      labels:['Hadir','Terlambat','Tidak Hadir'],
-      datasets:[{ data:[DATA.hadir, DATA.terlambat, DATA.absen], backgroundColor:[C.green, C.yellow, C.red], borderRadius:8 }]
+      labels:['Hadir','Terlambat','Tidak Hadir','Dinas Luar'],
+      datasets:[{ 
+        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas], 
+        backgroundColor:[C.green, C.yellow, C.red, C.blue], 
+        borderRadius:8 
+      }]
     },
     options:{ plugins:{legend:{display:false}}, responsive:true, scales:{ y:{beginAtZero:true} } }
   });
@@ -201,8 +229,11 @@
   new Chart(document.getElementById('presensiDonut'), {
     type:'doughnut',
     data:{
-      labels:['Hadir','Terlambat','Tidak Hadir'],
-      datasets:[{ data:[DATA.hadir, DATA.terlambat, DATA.absen], backgroundColor:[C.green, C.yellow, C.red]}]
+      labels:['Hadir','Terlambat','Tidak Hadir','Dinas Luar'],
+      datasets:[{ 
+        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas], 
+        backgroundColor:[C.green, C.yellow, C.red, C.blue] 
+      }]
     },
     options:{ plugins:{legend:{position:'bottom'}}, cutout:'60%', responsive:true }
   });

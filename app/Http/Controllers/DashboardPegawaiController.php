@@ -70,6 +70,7 @@ class DashboardPegawaiController extends Controller
             'hadir'        => 0,
             'terlambat'    => 0,
             'tidak hadir'  => 0,
+            'dinas_luar'   => 0, // ✅ tambahkan statistik dinas luar
         ];
 
         foreach ($rawPresensi as $status => $count) {
@@ -80,6 +81,8 @@ class DashboardPegawaiController extends Controller
                 $presensiStats['terlambat'] += (int) $count;
             } elseif (in_array($key, ['tidak hadir','tidak_hadir','alpha','absen'])) {
                 $presensiStats['tidak hadir'] += (int) $count;
+            } elseif ($key === 'dinas_luar') {
+                $presensiStats['dinas_luar'] += (int) $count;
             }
         }
 

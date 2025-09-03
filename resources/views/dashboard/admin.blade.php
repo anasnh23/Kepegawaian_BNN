@@ -9,6 +9,7 @@
   $hadir = (int) data_get($presensiStats ?? [], 'hadir', 0);
   $telat = (int) data_get($presensiStats ?? [], 'terlambat', 0);
   $tidak = (int) data_get($presensiStats ?? [], 'tidak hadir', 0);
+  $dinas = (int) data_get($presensiStats ?? [], 'dinas_luar', 0); // ✅ Tambahan Dinas Luar
 
   $kenaikan = (int) ($kenaikanGaji ?? 0);
   $totalCuti = is_iterable($cutiStats ?? null)
@@ -38,7 +39,7 @@
     --bnn-navy:#003366; --bnn-navy-2:#0b2f5e; --bnn-blue:#144272;
     --bnn-gold:#f0ad4e; --bnn-gold-2:#d89a2b;
     --soft:#eef3fb; --ink:#0f172a; --line:#e6edf6; --muted:#6b7a8c;
-    --green:#28a745; --yellow:#ffc107; --red:#dc3545;
+    --green:#28a745; --yellow:#ffc107; --red:#dc3545; --blue:#007bff;
   }
 
   .dash-header{
@@ -148,25 +149,33 @@
 
   {{-- ======= KPI Row 2 ======= --}}
   <div class="row mb-4">
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('presensi.admin') }}'">
-        <div class="kpi-title"><i class="fas fa-check-circle mr-2"></i>Presensi Hadir ({{ $labelPeriode ?? 'Bulan Ini' }})</div>
+        <div class="kpi-title"><i class="fas fa-check-circle mr-2"></i>Presensi Hadir</div>
         <div class="kpi-value">{{ number_format($hadir) }}</div>
         <div class="mini-desc mt-2">Terlambat: {{ number_format($telat) }} • Tidak Hadir: {{ number_format($tidak) }}</div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi-card p-3 h-100" onclick="location.href='/cutiadmin'">
-        <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti ({{ $labelPeriode ?? 'Bulan Ini' }})</div>
+        <div class="kpi-title"><i class="fas fa-plane-departure mr-2"></i>Cuti</div>
         <div class="kpi-value">{{ number_format($totalCuti) }}</div>
         <div class="mini-desc mt-2">Total pengajuan cuti dalam periode</div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
+    <div class="col-md-3 mb-3">
       <div class="kpi-card p-3 h-100" onclick="location.href='{{ route('pegawai.index') }}'">
         <div class="kpi-title"><i class="fas fa-user-shield mr-2"></i>Golongan Pangkat Terbanyak</div>
         <div class="kpi-value" style="font-size:1.6rem">{{ $fav }}</div>
         <div class="mini-desc mt-2">Dominan di populasi pegawai</div>
+      </div>
+    </div>
+    {{-- ✅ KPI Baru: Presensi Dinas Luar --}}
+    <div class="col-md-3 mb-3">
+      <div class="kpi-card p-3 h-100" onclick="location.href='{{ url("presensi-dinas") }}'">
+        <div class="kpi-title"><i class="fas fa-car-side mr-2"></i>Dinas Luar</div>
+        <div class="kpi-value">{{ number_format($dinas) }}</div>
+        <div class="mini-desc mt-2">Total presensi dinas luar</div>
       </div>
     </div>
   </div>
@@ -181,7 +190,7 @@
     </div>
     <div class="col-lg-4 mb-4">
       <div class="card card-bnn h-100" onclick="location.href='{{ route('presensi.admin') }}'">
-        <div class="card-header"><i class="fas fa-chart-bar mr-2"></i>Statistik Presensi ({{ $labelPeriode ?? '' }})</div>
+        <div class="card-header"><i class="fas fa-chart-bar mr-2"></i>Statistik Presensi</div>
         <div class="card-body"><canvas id="presensiChart" height="240"></canvas></div>
       </div>
     </div>
@@ -198,10 +207,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function(){
-  const C = { navy:'#003366', gold:'#f0ad4e', green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#2c74b3' };
+  const C = { navy:'#003366', gold:'#f0ad4e', green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#007bff' };
 
   const GENDER = { laki: {{ $lk }}, perempuan: {{ $pr }} };
-  const PRESENSI = { hadir: {{ $hadir }}, terlambat: {{ $telat }}, tidak: {{ $tidak }} };
+  const PRESENSI = { hadir: {{ $hadir }}, terlambat: {{ $telat }}, tidak: {{ $tidak }}, dinas: {{ $dinas }} }; // ✅ Tambahan dinas
   const PANGKAT_LABELS = {!! json_encode(array_values($labelsPangkat), JSON_UNESCAPED_UNICODE) !!};
   const PANGKAT_VALUES = {!! json_encode(array_values($valuesPangkat), JSON_NUMERIC_CHECK) !!};
 
@@ -213,8 +222,12 @@
 
   new Chart(document.getElementById('presensiChart').getContext('2d'), {
     type: 'bar',
-    data: { labels: ['Hadir', 'Terlambat', 'Tidak Hadir'], datasets: [{ label:'Jumlah', data:[PRESENSI.hadir, PRESENSI.terlambat, PRESENSI.tidak], backgroundColor:[C.green, C.yellow, C.red], borderRadius:8 }] },
-    options: { responsive:true, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, grid:{ color:'#e9eef6' } }, x:{ grid:{ display:false } } } }
+    data: { labels: ['Hadir', 'Terlambat', 'Tidak Hadir', 'Dinas Luar'], 
+            datasets: [{ label:'Jumlah', data:[PRESENSI.hadir, PRESENSI.terlambat, PRESENSI.tidak, PRESENSI.dinas], 
+            backgroundColor:[C.green, C.yellow, C.red, C.blue], borderRadius:8 }] },
+    options: { responsive:true, plugins:{ legend:{ display:false } }, 
+               scales:{ y:{ beginAtZero:true, grid:{ color:'#e9eef6' } }, 
+                        x:{ grid:{ display:false } } } }
   });
 
   new Chart(document.getElementById('pangkatChart').getContext('2d'), {
