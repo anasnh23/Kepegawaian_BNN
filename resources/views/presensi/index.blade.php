@@ -40,6 +40,7 @@
   .badge-status{ font-weight:700; border-radius:10px; padding:.35rem .55rem; }
   .badge-hadir{ background:#e7f6ec; color:#146c2e; border:1px solid #bfe5c8; }
   .badge-terlambat{ background:#fff7e6; color:#7a4d00; border:1px solid #ffe0ad; }
+  .badge-dinas{ background:#e6f0ff; color:#003380; border:1px solid #adcfff; }
   .badge-absen{ background:#fdeaea; color:#842029; border:1px solid #f8c2c7; }
   .thumb { width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #e6edf6; }
 </style>
@@ -51,6 +52,11 @@
       <i class="fas fa-fingerprint mr-2"></i> Presensi Pegawai BNN
     </div>
     <div class="card-body">
+      @if(!empty($blockKantor) && $blockKantor)
+        <div class="alert alert-warning mb-3">
+          Anda sudah melakukan presensi dinas luar hari ini, tidak bisa presensi kantor.
+        </div>
+      @endif
       <div class="row">
         <!-- Kamera -->
         <div class="col-md-6 mb-3">
@@ -67,7 +73,7 @@
             <input type="hidden" name="longitude" id="longitude">
             <input type="hidden" name="image_data" id="image_data">
             <div id="status-lokasi" class="status-info text-muted">📍 Menentukan lokasi Anda...</div>
-            <button type="submit" class="btn btn-presensi mt-3" id="btnPresensi" disabled>
+            <button type="submit" class="btn btn-presensi mt-3" id="btnPresensi" {{ !empty($blockKantor) && $blockKantor ? 'disabled' : '' }}>
               <i class="fas fa-check-circle"></i> Presensi Sekarang
             </button>
           </form>
@@ -92,7 +98,12 @@
     @if(!empty($todayPresensi))
       @php
         $st = strtolower($todayPresensi->status ?? '-');
-        $badgeClass = $st === 'hadir' ? 'badge-hadir' : ($st === 'terlambat' ? 'badge-terlambat' : 'badge-absen');
+        $badgeClass = match($st) {
+            'hadir'      => 'badge-hadir',
+            'terlambat'  => 'badge-terlambat',
+            'dinas_luar' => 'badge-dinas',
+            default      => 'badge-absen'
+        };
         $label = $st === 'tidak hadir' ? 'Tidak Hadir' : ucfirst($st);
       @endphp
       <div class="card-body p-0">
@@ -112,16 +123,16 @@
                 <td>{{ $todayPresensi->jam_masuk ?? '-' }}</td>
                 <td>
                   @if($todayPresensi->foto_masuk)
-                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" target="_blank">
-                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" class="thumb" alt="Masuk">
+                    <a href="{{ asset('storage/'.$todayPresensi->foto_masuk) }}" target="_blank">
+                      <img src="{{ asset('storage/'.$todayPresensi->foto_masuk) }}" class="thumb" alt="Masuk">
                     </a>
                   @else - @endif
                 </td>
                 <td>{{ $todayPresensi->jam_pulang ?? '-' }}</td>
                 <td>
                   @if($todayPresensi->foto_pulang)
-                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" target="_blank">
-                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" class="thumb" alt="Pulang">
+                    <a href="{{ asset('storage/'.$todayPresensi->foto_pulang) }}" target="_blank">
+                      <img src="{{ asset('storage/'.$todayPresensi->foto_pulang) }}" class="thumb" alt="Pulang">
                     </a>
                   @else - @endif
                 </td>
@@ -161,8 +172,12 @@
             @foreach($recent as $r)
               @php
                 $st = strtolower($r->status ?? '-');
-                $badge = $st === 'hadir' ? 'badge badge-success'
-                        : ($st === 'terlambat' ? 'badge badge-warning' : 'badge badge-danger');
+                $badge = match($st) {
+                    'hadir'      => 'badge badge-success',
+                    'terlambat'  => 'badge badge-warning',
+                    'dinas_luar' => 'badge badge-primary',
+                    default      => 'badge badge-danger'
+                };
                 $label = $st === 'tidak hadir' ? 'Tidak Hadir' : ucfirst($st);
               @endphp
               <tr>
@@ -242,7 +257,9 @@
 
     if (distance <= maxRadius) {
       statusLokasi.innerHTML = `<span class="status-success">✅ Anda dalam area kantor (${meter} m)</span>`;
-      btnPresensi.disabled = false;
+      if(!btnPresensi.hasAttribute('disabled')) {
+        btnPresensi.disabled = false;
+      }
     } else {
       statusLokasi.innerHTML = `<span class="status-danger">❌ Anda di luar area kantor (${meter} m)</span>`;
       btnPresensi.disabled = true;
@@ -268,7 +285,7 @@
     axios.post('{{ route("presensi.store") }}', data)
       .then(res => {
         Swal.fire({ icon: 'success', title: 'Presensi Berhasil', text: res.data.message, showConfirmButton: false, timer: 2500 })
-          .then(() => window.location.reload()); // refresh agar tabel "hari ini" update
+          .then(() => window.location.reload());
       })
       .catch(err => {
         Swal.fire('Presensi Gagal', err.response?.data?.message || 'Terjadi kesalahan.', 'error');
