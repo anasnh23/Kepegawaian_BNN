@@ -2,39 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Pangkat;
+use App\Models\RiwayatJabatanModel;
 use App\Models\MUser;
-use App\Models\RefGolonganPangkat;
-use App\Models\JabatanModel; // Import model dengan nama yang benar
-
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class PangkatController extends Controller
+class RiwayatJabatanController extends Controller
 {
+   
     public function index()
     {
         $user = Auth::user();
-        
+
         if ($user->id_level == 1) {
             // Admin: Tampilkan semua data
-            $pangkats = Pangkat::with(['user', 'refPangkat', 'jabatanModel'])->get(); // Pastikan nama relasi match method di model
+            $riwayatJabatans = RiwayatJabatanModel::with('user')->get();
             $breadcrumb = (object)[
-                'title' => 'Pangkat Semua Pegawai',
-                'list' => ['Dashboard', 'Kepegawaian', 'Pangkat']
+                'title' => 'Riwayat Jabatan Semua Pegawai',
+                'list' => ['Dashboard', 'Kepegawaian', 'Riwayat Jabatan']
             ];
         } else {
             // Non-admin: Tampilkan hanya milik sendiri
-            $pangkats = Pangkat::with(['user', 'refPangkat', 'jabatanModel'])->where('id_user', $user->id_user)->get(); // Pastikan nama relasi match
+            $riwayatJabatans = RiwayatJabatanModel::with('user')->where('id_user', $user->id_user)->get();
             $breadcrumb = (object)[
-                'title' => 'Pangkat Saya',
-                'list' => ['Dashboard', 'Kepegawaian', 'Pangkat']
+                'title' => 'Riwayat Jabatan Saya',
+                'list' => ['Dashboard', 'Kepegawaian', 'Riwayat Jabatan']
             ];
         }
 
-        $activeMenu = 'pangkat';
+        $activeMenu = 'riwayat_jabatan';
 
-        return view('pangkat.index', compact('pangkats', 'breadcrumb', 'activeMenu'));
+        return view('riwayatjabatan.index', compact('riwayatJabatans', 'breadcrumb', 'activeMenu'));
     }
 
     /**
@@ -46,9 +44,7 @@ class PangkatController extends Controller
             abort(403); // Hanya admin boleh create
         }
         $users = MUser::all(); // Ambil data users untuk select
-        $refPangkats = RefGolonganPangkat::all(); // Ambil data ref pangkat untuk select
-        $jabatans = JabatanModel::all(); // Gunakan nama model yang benar
-        return view('pangkat.create', compact('users', 'refPangkats', 'jabatans'));
+        return view('riwayatjabatan.create', compact('users'));
     }
 
     /**
@@ -62,15 +58,16 @@ class PangkatController extends Controller
         // Validation to match model's fillable fields
         $request->validate([
             'id_user' => 'required|exists:m_user,id_user',
-            'id_jabatan' => 'nullable|exists:jabatan,id_jabatan', // Sesuaikan nama tabel jabatan
-            'id_ref_pangkat' => 'nullable|exists:ref_golongan_pangkat,id_ref_pangkat',
-            'golongan_pangkat' => 'nullable|string|max:10',
+            'nama_jabatan' => 'required|string',
+            'tmt_mulai' => 'required|date',
+            'tmt_selesai' => 'nullable|date',
+            'keterangan' => 'nullable|string',
         ]);
 
-        Pangkat::create($request->all());
+        RiwayatJabatanModel::create($request->all());
 
         // Kembalikan response JSON untuk AJAX
-        return response()->json(['success' => 'Pangkat berhasil ditambahkan.']);
+        return response()->json(['success' => 'Riwayat Jabatan berhasil ditambahkan.']);
     }
 
     /**
@@ -78,19 +75,19 @@ class PangkatController extends Controller
      */
     public function show($id)
     {
-        $pangkat = Pangkat::find($id);
+        $riwayatJabatan = RiwayatJabatanModel::find($id);
 
-        if (!$pangkat) {
+        if (!$riwayatJabatan) {
             return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
 
         // Cek akses: Non-admin hanya bisa lihat milik sendiri
-        if (Auth::user()->id_level != 1 && $pangkat->id_user != Auth::user()->id_user) {
+        if (Auth::user()->id_level != 1 && $riwayatJabatan->id_user != Auth::user()->id_user) {
             abort(403);
         }
 
-        $pangkat->load(['user', 'refPangkat', 'jabatanModel']); // Pastikan nama relasi match method di model
-        return view('pangkat.show', compact('pangkat'));
+        $riwayatJabatan->load('user'); // Load relasi jika diperlukan
+        return view('riwayatjabatan.show', compact('riwayatJabatan'));
     }
 
     /**
@@ -101,16 +98,14 @@ class PangkatController extends Controller
         if (Auth::user()->id_level != 1) {
             abort(403); // Hanya admin boleh edit
         }
-        $pangkat = Pangkat::find($id);
+        $riwayatJabatan = RiwayatJabatanModel::find($id);
 
-        if (!$pangkat) {
+        if (!$riwayatJabatan) {
             return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
 
         $users = MUser::all(); // Ambil data users untuk select
-        $refPangkats = RefGolonganPangkat::all(); // Ambil data ref pangkat untuk select
-        $jabatans = JabatanModel::all(); // Gunakan nama model yang benar
-        return view('pangkat.edit', compact('pangkat', 'users', 'refPangkats', 'jabatans'));
+        return view('riwayatjabatan.edit', compact('riwayatJabatan', 'users'));
     }
 
     /**
@@ -121,24 +116,25 @@ class PangkatController extends Controller
         if (Auth::user()->id_level != 1) {
             abort(403); // Hanya admin boleh update
         }
-        $pangkat = Pangkat::find($id);
+        $riwayatJabatan = RiwayatJabatanModel::find($id);
 
-        if (!$pangkat) {
+        if (!$riwayatJabatan) {
             return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
 
         // Validation to match model's fillable fields
         $request->validate([
             'id_user' => 'required|exists:m_user,id_user',
-            'id_jabatan' => 'nullable|exists:jabatan,id_jabatan', // Sesuaikan nama tabel jabatan
-            'id_ref_pangkat' => 'nullable|exists:ref_golongan_pangkat,id_ref_pangkat',
-            'golongan_pangkat' => 'nullable|string|max:10',
+            'nama_jabatan' => 'required|string',
+            'tmt_mulai' => 'required|date',
+            'tmt_selesai' => 'nullable|date',
+            'keterangan' => 'nullable|string',
         ]);
 
-        $pangkat->update($request->all());
+        $riwayatJabatan->update($request->all());
 
         // Kembalikan response JSON untuk AJAX
-        return response()->json(['success' => 'Pangkat berhasil diperbarui.']);
+        return response()->json(['success' => 'Riwayat Jabatan berhasil diperbarui.']);
     }
 
     /**
@@ -149,15 +145,15 @@ class PangkatController extends Controller
         if (Auth::user()->id_level != 1) {
             abort(403); // Hanya admin boleh delete
         }
-        $pangkat = Pangkat::find($id);
+        $riwayatJabatan = RiwayatJabatanModel::find($id);
 
-        if (!$pangkat) {
+        if (!$riwayatJabatan) {
             return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
 
-        $pangkat->delete();
+        $riwayatJabatan->delete();
 
         // Kembalikan response JSON untuk AJAX
-        return response()->json(['success' => 'Pangkat berhasil dihapus.']);
+        return response()->json(['success' => 'Riwayat Jabatan berhasil dihapus.']);
     }
 }

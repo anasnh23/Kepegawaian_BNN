@@ -5,12 +5,14 @@
 @section('content')
 <div class="container-fluid">
 
-    <!-- Tombol Tambah Riwayat Gaji -->
+    @if(auth()->user()->id_level == 1)
+    <!-- Tombol Tambah Riwayat Gaji (hanya untuk admin) -->
     <div class="d-flex justify-content-end mb-2">
         <button id="btnTambahRiwayatGaji" class="btn btn-warning text-dark font-weight-bold shadow-sm">
             <i class="fas fa-plus"></i> Tambah data
         </button>
     </div>
+    @endif
 
     <!-- Tabel Riwayat Gaji -->
     <div class="card shadow-sm">
@@ -19,7 +21,8 @@
         </div>
 
         <div class="card-body">
-            <!-- FILTER BAR -->
+            <!-- FILTER BAR (hanya untuk admin) -->
+            @if(auth()->user()->id_level == 1)
             <div class="row mb-3">
                 <div class="col-md-4 mb-2">
                     <input type="text" id="filterNama" class="form-control form-control-sm shadow-sm" placeholder="Cari Nama Pegawai">
@@ -30,6 +33,7 @@
                     </button>
                 </div>
             </div>
+            @endif
 
             <!-- TABEL -->
             <div class="table-responsive">
@@ -41,7 +45,9 @@
                             <th>Tanggal Berlaku</th>
                             <th>Gaji Pokok</th>
                             <th>Keterangan</th>
-                            <th>Aksi</th>
+                            @if(auth()->user()->id_level == 1)
+                            <th>Aksi</th> <!-- Hanya tampil untuk admin -->
+                            @endif
                         </tr>
                     </thead>
                     <tbody id="tabelRiwayatGaji">
@@ -52,14 +58,16 @@
                             <td>{{ \Carbon\Carbon::parse($data->tanggal_berlaku)->format('d-m-Y') }}</td>
                             <td>Rp. {{ number_format($data->gaji_pokok, 0, ',', '.') }}</td>
                             <td>{{ $data->keterangan ?? '-' }}</td>
+                            @if(auth()->user()->id_level == 1)
                             <td class="text-center">
                                 <button class="btn btn-sm btn-info btnViewRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-eye"></i></button>
                                 <button class="btn btn-sm btn-warning btnEditRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-pencil-alt"></i></button>
                                 <button class="btn btn-sm btn-danger btnDeleteRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-trash-alt"></i></button>
                             </td>
+                            @endif
                         </tr>
                         @empty
-                        <tr><td colspan="6" class="text-center text-muted">Belum ada data riwayat gaji.</td></tr>
+                        <tr><td colspan="{{ auth()->user()->id_level == 1 ? 6 : 5 }}" class="text-center text-muted">Belum ada data riwayat gaji.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -89,7 +97,8 @@ $(document).ready(function () {
         }
     });
 
-    // === CREATE ===
+    // === CREATE (hanya jika admin) ===
+    @if(auth()->user()->id_level == 1)
     $('#btnTambahRiwayatGaji').click(function () {
         $('#modalFormRiwayatGaji').modal('show');
         $('#modalRiwayatGajiContent').load("{{ route('riwayat_gaji.create') }}");
@@ -117,8 +126,10 @@ $(document).ready(function () {
             }
         });
     });
+    @endif
 
-    // === EDIT ===
+    // === EDIT (hanya jika admin) ===
+    @if(auth()->user()->id_level == 1)
     $(document).on('click', '.btnEditRiwayatGaji', function () {
         const id = $(this).data('id');
         $('#modalFormRiwayatGaji').modal('show');
@@ -150,6 +161,7 @@ $(document).ready(function () {
             }
         });
     });
+    @endif
 
     // === VIEW / DETAIL ===
     $(document).on('click', '.btnViewRiwayatGaji', function () {
@@ -158,7 +170,8 @@ $(document).ready(function () {
         $('#modalRiwayatGajiContent').load(`{{ url('/riwayat_gaji') }}/${id}`);
     });
 
-    // === DELETE ===
+    // === DELETE (hanya jika admin) ===
+    @if(auth()->user()->id_level == 1)
     $(document).on('click', '.btnDeleteRiwayatGaji', function () {
         const id = $(this).data('id');
 
@@ -194,8 +207,10 @@ $(document).ready(function () {
             }
         });
     });
+    @endif
 
-    // === FILTER ===
+    // === FILTER (hanya jika admin) ===
+    @if(auth()->user()->id_level == 1)
     $('#filterNama').on('input', function () {
         let nama = $(this).val().toLowerCase();
 
@@ -213,6 +228,7 @@ $(document).ready(function () {
         $('#filterNama').val('');
         $('#filterNama').trigger('input'); // Trigger ulang filter
     });
+    @endif
 
 });
 </script>
