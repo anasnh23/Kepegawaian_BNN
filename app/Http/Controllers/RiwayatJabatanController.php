@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RiwayatJabatanModel;
-use App\Models\MUser;
+use App\Models\MUser ;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -32,7 +32,8 @@ class RiwayatJabatanController extends Controller
 
         $activeMenu = 'riwayat_jabatan';
 
-        return view('riwayatjabatan.index', compact('riwayatJabatans', 'breadcrumb', 'activeMenu'));
+        // Perbaikan: sesuaikan nama folder view dengan underscore
+        return view('riwayat_jabatan.index', compact('riwayatJabatans', 'breadcrumb', 'activeMenu'));
     }
 
     /**
@@ -43,8 +44,8 @@ class RiwayatJabatanController extends Controller
         if (Auth::user()->id_level != 1) {
             abort(403); // Hanya admin boleh create
         }
-        $users = MUser::all(); // Ambil data users untuk select
-        return view('riwayatjabatan.create', compact('users'));
+        $users = MUser ::all(); // Ambil data users untuk select
+        return view('riwayat_jabatan.create', compact('users'));
     }
 
     /**
@@ -87,7 +88,7 @@ class RiwayatJabatanController extends Controller
         }
 
         $riwayatJabatan->load('user'); // Load relasi jika diperlukan
-        return view('riwayatjabatan.show', compact('riwayatJabatan'));
+        return view('riwayat_jabatan.show', compact('riwayatJabatan'));
     }
 
     /**
@@ -104,8 +105,8 @@ class RiwayatJabatanController extends Controller
             return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
 
-        $users = MUser::all(); // Ambil data users untuk select
-        return view('riwayatjabatan.edit', compact('riwayatJabatan', 'users'));
+        $users = MUser ::all(); // Ambil data users untuk select
+        return view('riwayat_jabatan.edit', compact('riwayatJabatan', 'users'));
     }
 
     /**
