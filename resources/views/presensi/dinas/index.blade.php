@@ -33,6 +33,8 @@
 
   .thead-bnn th{ background:#0f1f39; color:#eaf2ff; border-color:#0f1f39; }
   .thumb { width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #e6edf6; }
+
+  .badge-dinas{ background:#e6f0ff; color:#003380; border:1px solid #adcfff; padding:.35rem .55rem; border-radius:10px; font-weight:700; }
 </style>
 
 <div class="container-fluid">
@@ -42,6 +44,11 @@
       <i class="fas fa-map-marked-alt mr-2"></i> Presensi Dinas Luar
     </div>
     <div class="card-body">
+      @if(!empty($blockDinas) && $blockDinas)
+        <div class="alert alert-warning mb-3">
+          Anda sudah melakukan presensi kantor hari ini, tidak bisa presensi dinas luar.
+        </div>
+      @endif
       <div class="row">
         <!-- Kamera -->
         <div class="col-md-6 mb-3">
@@ -58,7 +65,7 @@
             <input type="hidden" name="longitude" id="longitude">
             <input type="hidden" name="image_data" id="image_data">
 
-            <button type="submit" class="btn btn-presensi mt-3" id="btnPresensi">
+            <button type="submit" class="btn btn-presensi mt-3" id="btnPresensi" {{ !empty($blockDinas) && $blockDinas ? 'disabled' : '' }}>
               <i class="fas fa-check-circle"></i> Presensi Sekarang
             </button>
           </form>
@@ -84,6 +91,7 @@
                 <th>Jam Pulang</th>
                 <th>Foto Pulang</th>
                 <th>Lokasi</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -91,20 +99,23 @@
                 <td>{{ $todayPresensi->jam_masuk ?? '-' }}</td>
                 <td>
                   @if($todayPresensi->foto_masuk)
-                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" target="_blank">
-                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_masuk) }}" class="thumb">
+                    <a href="{{ asset('storage/'.$todayPresensi->foto_masuk) }}" target="_blank">
+                      <img src="{{ asset('storage/'.$todayPresensi->foto_masuk) }}" class="thumb">
                     </a>
                   @else - @endif
                 </td>
                 <td>{{ $todayPresensi->jam_pulang ?? '-' }}</td>
                 <td>
                   @if($todayPresensi->foto_pulang)
-                    <a href="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" target="_blank">
-                      <img src="{{ asset('storage/presensi/'.$todayPresensi->foto_pulang) }}" class="thumb">
+                    <a href="{{ asset('storage/'.$todayPresensi->foto_pulang) }}" target="_blank">
+                      <img src="{{ asset('storage/'.$todayPresensi->foto_pulang) }}" class="thumb">
                     </a>
                   @else - @endif
                 </td>
-                <td>{{ $todayPresensi->lokasi ?? '-' }}</td>
+                <td class="text-truncate" style="max-width:200px" title="{{ $todayPresensi->lokasi ?? '-' }}">
+                  {{ $todayPresensi->lokasi ?? '-' }}
+                </td>
+                <td><span class="badge-dinas">Dinas Luar</span></td>
               </tr>
             </tbody>
           </table>
@@ -134,6 +145,7 @@
               <th>Masuk</th>
               <th>Pulang</th>
               <th>Lokasi</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
@@ -142,7 +154,10 @@
                 <td>{{ \Carbon\Carbon::parse($r->tanggal)->translatedFormat('d M Y') }}</td>
                 <td>{{ $r->jam_masuk ?? '-' }}</td>
                 <td>{{ $r->jam_pulang ?? '-' }}</td>
-                <td>{{ $r->lokasi ?? '-' }}</td>
+                <td class="text-truncate" style="max-width:200px" title="{{ $r->lokasi ?? '-' }}">
+                  {{ $r->lokasi ?? '-' }}
+                </td>
+                <td><span class="badge-dinas">Dinas Luar</span></td>
               </tr>
             @endforeach
           </tbody>
