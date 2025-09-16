@@ -1,4 +1,3 @@
-{{-- resources/views/riwayat_gaji/index.blade.php --}}
 @extends('layouts.template')
 @section('title', 'Data Riwayat Gaji')
 
@@ -6,28 +5,31 @@
 <div class="container-fluid">
 
     @if(auth()->user()->id_level == 1)
-    <!-- Tombol Tambah Riwayat Gaji (hanya untuk admin) -->
+    <!-- Tombol Tambah (Admin saja) -->
     <div class="d-flex justify-content-end mb-2">
-        <button id="btnTambahRiwayatGaji" class="btn btn-warning text-dark font-weight-bold shadow-sm">
+        <button id="btnTambahGaji" class="btn btn-warning text-dark font-weight-bold shadow-sm">
             <i class="fas fa-plus"></i> Tambah data
         </button>
     </div>
     @endif
 
-    <!-- Tabel Riwayat Gaji -->
+    <!-- Kartu Tabel -->
     <div class="card shadow-sm">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0">Data Riwayat Gaji</h5>
         </div>
 
         <div class="card-body">
-            <!-- FILTER BAR (hanya untuk admin) -->
+            {{-- FILTER (admin) --}}
             @if(auth()->user()->id_level == 1)
             <div class="row mb-3">
                 <div class="col-md-4 mb-2">
                     <input type="text" id="filterNama" class="form-control form-control-sm shadow-sm" placeholder="Cari Nama Pegawai">
                 </div>
-                <div class="col-md-2 mb-2 text-right">
+                <div class="col-md-3 mb-2">
+                    <input type="number" id="filterTahun" class="form-control form-control-sm shadow-sm" placeholder="Tahun Berlaku (YYYY)" min="1900" max="{{ date('Y') }}">
+                </div>
+                <div class="col-md-2 mb-2">
                     <button id="btnResetFilter" class="btn btn-sm btn-outline-secondary w-100 shadow-sm">
                         <i class="fas fa-sync-alt"></i> Reset
                     </button>
@@ -35,51 +37,81 @@
             </div>
             @endif
 
-            <!-- TABEL -->
             <div class="table-responsive">
                 <table class="table table-bordered table-hover text-sm m-0">
                     <thead class="thead-dark text-center">
                         <tr>
-                            <th>No</th>
-                            <th>Nama Pegawai</th>
+                            <th style="width: 60px;">No</th>
+                            @if(auth()->user()->id_level == 1)
+                                <th>Nama Pegawai</th>
+                            @endif
                             <th>Tanggal Berlaku</th>
                             <th>Gaji Pokok</th>
-                            <th>Keterangan</th>
                             @if(auth()->user()->id_level == 1)
-                            <th>Aksi</th> <!-- Hanya tampil untuk admin -->
+                                <th style="width: 140px;">Aksi</th>
                             @endif
                         </tr>
                     </thead>
-                    <tbody id="tabelRiwayatGaji">
+                    <tbody id="tabelGaji">
                         @forelse ($riwayatGajis as $index => $data)
                         <tr id="row-{{ $data->id_riwayat_gaji }}">
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td>{{ $data->user->nama ?? '-' }}</td>
-                            <td>{{ \Carbon\Carbon::parse($data->tanggal_berlaku)->format('d-m-Y') }}</td>
-                            <td>Rp. {{ number_format($data->gaji_pokok, 0, ',', '.') }}</td>
-                            <td>{{ $data->keterangan ?? '-' }}</td>
+                            <td class="text-center align-middle">{{ $index + 1 }}</td>
+
                             @if(auth()->user()->id_level == 1)
-                            <td class="text-center">
-                                <button class="btn btn-sm btn-info btnViewRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-eye"></i></button>
-                                <button class="btn btn-sm btn-warning btnEditRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-pencil-alt"></i></button>
-                                <button class="btn btn-sm btn-danger btnDeleteRiwayatGaji" data-id="{{ $data->id_riwayat_gaji }}"><i class="fas fa-trash-alt"></i></button>
+                            <td class="align-middle">{{ $data->user->nama ?? '-' }}</td>
+                            @endif
+
+                            <td class="align-middle">
+                                @php
+                                    try {
+                                        $tgl = \Carbon\Carbon::parse($data->tanggal_berlaku)->format('d/m/Y');
+                                    } catch (\Exception $e) {
+                                        $tgl = $data->tanggal_berlaku;
+                                    }
+                                @endphp
+                                {{ $tgl ?? '-' }}
+                            </td>
+
+                            <td class="align-middle text-left">
+                                @php
+                                    $nom = is_numeric($data->gaji_pokok) ? number_format($data->gaji_pokok, 0, ',', '.') : $data->gaji_pokok;
+                                @endphp
+                                Rp {{ $nom }}
+                            </td>
+
+                            @if(auth()->user()->id_level == 1)
+                            <td class="text-center align-middle">
+                                <button class="btn btn-sm btn-info btnViewGaji" data-id="{{ $data->id_riwayat_gaji }}" title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning btnEditGaji" data-id="{{ $data->id_riwayat_gaji }}" title="Edit">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger btnDeleteGaji" data-id="{{ $data->id_riwayat_gaji }}" title="Hapus">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
                             </td>
                             @endif
                         </tr>
                         @empty
-                        <tr><td colspan="{{ auth()->user()->id_level == 1 ? 6 : 5 }}" class="text-center text-muted">Belum ada data riwayat gaji.</td></tr>
+                        <tr>
+                            <td colspan="{{ auth()->user()->id_level == 1 ? 5 : 3 }}" class="text-center text-muted">
+                                Belum ada data riwayat gaji.
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
+
         </div>
     </div>
 
-    <!-- Modal Tambah / Edit / View Riwayat Gaji -->
-    <div class="modal fade" id="modalFormRiwayatGaji" tabindex="-1" aria-labelledby="modalRiwayatGajiLabel" aria-hidden="true">
+    <!-- Modal (Create/Edit/Show) -->
+    <div class="modal fade" id="modalFormGaji" tabindex="-1" aria-labelledby="modalGajiLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content" id="modalRiwayatGajiContent">
-                {{-- Konten form create/edit/view akan dimuat via AJAX --}}
+            <div class="modal-content" id="modalGajiContent">
+                {{-- Konten dimuat via AJAX --}}
             </div>
         </div>
     </div>
@@ -89,119 +121,100 @@
 
 @push('scripts')
 <script>
-$(document).ready(function () {
-
+$(function () {
     $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
+        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')}
     });
 
-    // === CREATE (hanya jika admin) ===
+    // === CREATE (admin) ===
     @if(auth()->user()->id_level == 1)
-    $('#btnTambahRiwayatGaji').click(function () {
-        $('#modalFormRiwayatGaji').modal('show');
-        $('#modalRiwayatGajiContent').load("{{ route('riwayat_gaji.create') }}");
+    $('#btnTambahGaji').on('click', function () {
+        $('#modalFormGaji').modal('show');
+        $('#modalGajiContent').load("{{ route('riwayat_gaji.create') }}");
     });
 
-    $(document).on('submit', '#formCreateRiwayatGaji', function (e) {
+    $(document).on('submit', '#formCreateGaji', function (e) {
         e.preventDefault();
-        let formData = new FormData(this);
-        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        const formData = new FormData(this);
 
         $.ajax({
             url: "{{ route('riwayat_gaji.store') }}",
-            type: "POST",
-            data: formData,
-            contentType: false,
-            processData: false,
+            method: "POST",
+            data: formData, contentType: false, processData: false,
             success: function (res) {
-                $('#modalFormRiwayatGaji').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.success, timer: 1500, showConfirmButton: false });
-                setTimeout(() => location.reload(), 1500);
+                $('#modalFormGaji').modal('hide');
+                Swal.fire({icon:'success', title:'Berhasil!', text:res.success, timer:1500, showConfirmButton:false});
+                setTimeout(()=>location.reload(), 1500);
             },
             error: function (err) {
-                console.error(err.responseJSON);
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal menyimpan data.' });
+                Swal.fire({icon:'error', title:'Gagal!', text: err.responseJSON?.message || 'Gagal menyimpan data.'});
             }
         });
     });
     @endif
 
-    // === EDIT (hanya jika admin) ===
+    // === EDIT (admin) ===
     @if(auth()->user()->id_level == 1)
-    $(document).on('click', '.btnEditRiwayatGaji', function () {
+    $(document).on('click', '.btnEditGaji', function () {
         const id = $(this).data('id');
-        $('#modalFormRiwayatGaji').modal('show');
-        $('#modalRiwayatGajiContent').load(`{{ url('/riwayat_gaji') }}/${id}/edit`);
+        $('#modalFormGaji').modal('show');
+        $('#modalGajiContent').load(`{{ url('/riwayat_gaji') }}/${id}/edit`);
     });
 
-    $(document).on('submit', '#formEditRiwayatGaji', function (e) {
+    $(document).on('submit', '#formEditGaji', function (e) {
         e.preventDefault();
-        let formData = new FormData(this);
-        let id = $(this).find('input[name="id_riwayat_gaji"]').val() || formData.get('id_riwayat_gaji'); // Asumsi hidden input jika perlu
-
-        formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+        const formData = new FormData(this);
+        const id = $(this).find('input[name="id_riwayat_gaji"]').val() || formData.get('id_riwayat_gaji');
         formData.append('_method', 'PUT');
 
         $.ajax({
             url: `{{ url('/riwayat_gaji') }}/${id}`,
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
+            method: 'POST',
+            data: formData, contentType: false, processData: false,
             success: function (res) {
-                $('#modalFormRiwayatGaji').modal('hide');
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.success, timer: 1500, showConfirmButton: false });
-                setTimeout(() => location.reload(), 1500);
+                $('#modalFormGaji').modal('hide');
+                Swal.fire({icon:'success', title:'Berhasil!', text:res.success, timer:1500, showConfirmButton:false});
+                setTimeout(()=>location.reload(), 1500);
             },
             error: function (err) {
-                console.error(err.responseJSON);
-                Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal update data.' });
+                Swal.fire({icon:'error', title:'Gagal!', text: err.responseJSON?.message || 'Gagal update data.'});
             }
         });
     });
     @endif
 
-    // === VIEW / DETAIL ===
-    $(document).on('click', '.btnViewRiwayatGaji', function () {
+    // === VIEW (semua) ===
+    $(document).on('click', '.btnViewGaji', function () {
         const id = $(this).data('id');
-        $('#modalFormRiwayatGaji').modal('show');
-        $('#modalRiwayatGajiContent').load(`{{ url('/riwayat_gaji') }}/${id}`);
+        $('#modalFormGaji').modal('show');
+        $('#modalGajiContent').load(`{{ url('/riwayat_gaji') }}/${id}`);
     });
 
-    // === DELETE (hanya jika admin) ===
+    // === DELETE (admin) ===
     @if(auth()->user()->id_level == 1)
-    $(document).on('click', '.btnDeleteRiwayatGaji', function () {
+    $(document).on('click', '.btnDeleteGaji', function () {
         const id = $(this).data('id');
-
         Swal.fire({
             title: 'Yakin hapus data ini?',
-            text: "Data tidak bisa dikembalikan!",
+            text: 'Data tidak bisa dikembalikan!',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#aaa',
             confirmButtonText: 'Ya, hapus!',
             cancelButtonText: 'Batal'
-        }).then((result) => {
+        }).then(result => {
             if (result.isConfirmed) {
                 $.ajax({
                     url: `{{ url('/riwayat_gaji') }}/${id}`,
-                    type: 'POST',
-                    data: {
-                        _method: 'DELETE',
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    },
+                    method: 'POST',
+                    data: {_method:'DELETE'},
                     success: function (res) {
-                        $('#row-' + id).fadeOut('slow', function () {
-                            $(this).remove();
-                        });
-                        Swal.fire({ icon: 'success', title: 'Terhapus!', text: res.success || 'Data berhasil dihapus.', timer: 1500 });
+                        $('#row-'+id).fadeOut('slow', function(){ $(this).remove(); });
+                        Swal.fire({icon:'success', title:'Terhapus!', text:res.success || 'Data berhasil dihapus.', timer:1500});
                     },
                     error: function (err) {
-                        console.error(err.responseJSON);
-                        Swal.fire({ icon: 'error', title: 'Gagal!', text: err.responseJSON?.message || 'Gagal menghapus data.' });
+                        Swal.fire({icon:'error', title:'Gagal!', text: err.responseJSON?.message || 'Gagal menghapus data.'});
                     }
                 });
             }
@@ -209,27 +222,28 @@ $(document).ready(function () {
     });
     @endif
 
-    // === FILTER (hanya jika admin) ===
+    // === FILTER (admin) ===
     @if(auth()->user()->id_level == 1)
-    $('#filterNama').on('input', function () {
-        let nama = $(this).val().toLowerCase();
+    $('#filterNama, #filterTahun').on('input', function () {
+        const nama = ($('#filterNama').val()||'').toLowerCase();
+        const tahun = ($('#filterTahun').val()||'').trim();
 
-        $('#tabelRiwayatGaji tr').each(function () {
-            let row = $(this);
-            let textNama = row.find('td:eq(1)').text().toLowerCase();
-
-            let matchNama = nama === '' || textNama.includes(nama);
-
-            row.toggle(matchNama);
+        $('#tabelGaji tr').each(function () {
+            const row = $(this);
+            const textNama = row.find('td').eq(1).text().toLowerCase(); // kolom nama (admin)
+            const tglText = row.find('td').eq(2).text(); // kolom tanggal (dd/mm/YYYY)
+            const matchNama = nama === '' || textNama.includes(nama);
+            const matchTahun = tahun === '' || (tglText.length >= 10 && tglText.slice(-4) === tahun);
+            row.toggle(matchNama && matchTahun);
         });
     });
 
-    $('#btnResetFilter').click(function () {
+    $('#btnResetFilter').on('click', function () {
         $('#filterNama').val('');
-        $('#filterNama').trigger('input'); // Trigger ulang filter
+        $('#filterTahun').val('');
+        $('#filterNama').trigger('input');
     });
     @endif
-
 });
 </script>
 @endpush

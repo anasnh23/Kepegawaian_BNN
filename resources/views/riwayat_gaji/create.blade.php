@@ -1,12 +1,12 @@
 {{-- resources/views/riwayat_gaji/create.blade.php --}}
 <div class="modal-header bg-primary text-white">
-    <h5 class="modal-title">Tambah Data Riwayat Gaji</h5>
+    <h5 class="modal-title">Tambah Riwayat Gaji</h5>
     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
 
-<form id="formCreateRiwayatGaji" enctype="multipart/form-data">
+<form id="formCreateGaji" enctype="multipart/form-data">
     @csrf
     <div class="modal-body">
         <div class="row">
@@ -15,7 +15,7 @@
                 <label for="id_user">Pegawai <span class="text-danger">*</span></label>
                 <select name="id_user" class="form-control" required>
                     <option value="">-- Pilih Pegawai --</option>
-                    @foreach ($users as $user) {{-- Asumsi $users dikirim dari controller --}}
+                    @foreach ($users as $user)
                         <option value="{{ $user->id_user }}">{{ $user->nama }}</option>
                     @endforeach
                 </select>
@@ -27,13 +27,13 @@
             </div>
 
             <div class="form-group col-md-6">
-                <label for="gaji_pokok">Gaji Pokok <span class="text-danger">*</span></label>
-                <input type="number" name="gaji_pokok" class="form-control" required min="0">
+                <label for="gaji_pokok">Gaji Pokok (Rp) <span class="text-danger">*</span></label>
+                <input type="number" name="gaji_pokok" class="form-control" required min="0" step="1000" placeholder="Contoh: 5000000">
             </div>
 
-            <div class="form-group col-md-12">
+            <div class="form-group col-md-6">
                 <label for="keterangan">Keterangan</label>
-                <textarea name="keterangan" class="form-control" rows="3"></textarea>
+                <textarea name="keterangan" class="form-control" rows="2" placeholder="Opsional"></textarea>
             </div>
 
         </div>
