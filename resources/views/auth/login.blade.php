@@ -30,7 +30,6 @@
                max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     }
 
-    /* GRID tipis */
     .grid{
       position:fixed; inset:0; pointer-events:none; opacity:.12;
       background-image:
@@ -41,7 +40,6 @@
       mask-image: radial-gradient(1300px 800px at 50% 40%, black 60%, transparent 100%);
     }
 
-    /* ORBS */
     .orb{
       position:fixed; border-radius:50%;
       filter:blur(80px); opacity:.35; pointer-events:none;
@@ -57,7 +55,6 @@
       100%{ transform:translateY(0) translateX(-20px) scale(1); }
     }
 
-    /* SPRITES (ikon FA) mengambang */
     .sprites{ position:fixed; inset:0; pointer-events:none; z-index:2; }
     .sprite{
       position:absolute; font-size:18px; opacity:.18; color:#cfe6ff;
@@ -81,7 +78,6 @@
     .s6 { top:55vh;  left:95vw;  animation: drift-diag-2 40s infinite; }
     .s7 { top:35vh;  left:-5vw;  animation: drift-diag 56s infinite; }
 
-    /* SPARKLES halus */
     .sparkle{
       position:fixed; inset:0; pointer-events:none; z-index:3; opacity:.15;
       background:
@@ -96,7 +92,6 @@
       to  { opacity:.18; transform:translateY(-6px) }
     }
 
-    /* KARTU LOGIN (parallax siap tilt) */
     .login{
       inline-size: min(92vw, 500px);
       background:
@@ -109,12 +104,11 @@
         inset 0 1px 0 rgba(255,255,255,.08);
       padding: clamp(18px, 2.8vw, 30px);
       position:relative; z-index:10;
-      transform-style: preserve-3d;      /* untuk tilt */
+      transform-style: preserve-3d;
       will-change: transform;
       transition: transform .18s ease, box-shadow .18s ease;
     }
     .login::before{
-      /* glare halus di atas kartu */
       content:""; position:absolute; inset:0; border-radius:26px; pointer-events:none;
       background: radial-gradient(60% 60% at 10% 0%, rgba(255,255,255,.12), transparent 60%);
       transform: translateZ(40px);
@@ -168,7 +162,6 @@
     .row-actions a{ color:#d9e7ff; text-decoration:none }
     .row-actions a:hover{ text-decoration:underline }
 
-    /* TOMBOL EMAS “premium” */
     .btn{
       inline-size:100%; padding:14px 16px; border:0; border-radius:14px; cursor:pointer;
       color:#07202b; font-weight:900; letter-spacing:.2px;
@@ -216,7 +209,6 @@
   </style>
 </head>
 <body>
-  <!-- Layers: orbs, grid, sprites, sparkles -->
   <div class="orb blue"></div>
   <div class="orb cyan"></div>
   <div class="orb gold"></div>
@@ -234,7 +226,6 @@
 
   <div class="sparkle" aria-hidden="true"></div>
 
-  <!-- Kartu login -->
   <main class="login" id="card" role="main" aria-label="Form Login SIAP BNN">
     <div class="head">
       <img src="{{ asset('adminlte/dist/img/bnn.jpg') }}" alt="Logo BNN">
@@ -265,7 +256,8 @@
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
             <input type="checkbox" name="remember" style="accent-color:#2c74b3"> Ingat saya
           </label>
-          <a href="#">Lupa password?</a>
+          <!-- Link lupa password dengan ID -->
+          <a href="#" id="linkForgot">Lupa password?</a>
         </div>
 
         <button type="submit" class="btn" id="btnLogin">
@@ -293,15 +285,15 @@
       pwd.focus();
     });
 
-    // Parallax tilt super halus pada kartu
+    // Parallax tilt pada kartu
     (function(){
       const card = document.getElementById('card');
-      const maxTilt = 10; // derajat
+      const maxTilt = 10;
       let raf = null;
 
       function handle(e){
         const r = card.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width - 0.5;   // -0.5..0.5
+        const px = (e.clientX - r.left) / r.width - 0.5;
         const py = (e.clientY - r.top)  / r.height - 0.5;
         const rx = (+py * maxTilt);
         const ry = (-px * maxTilt);
@@ -317,7 +309,6 @@
       }
       card.addEventListener('mousemove', handle);
       card.addEventListener('mouseleave', reset);
-      // sentuh: kecilkan efek
       card.addEventListener('touchmove', (e)=>{
         const t = e.touches[0];
         if(t) handle(t);
@@ -325,7 +316,7 @@
       card.addEventListener('touchend', reset);
     })();
 
-    // Randomisasi kecil durasi & ukuran sprites agar hidup
+    // Randomisasi kecil durasi & ukuran sprites
     (function(){
       document.querySelectorAll('.sprite').forEach((el, i)=>{
         const d = parseFloat(getComputedStyle(el).animationDuration) || (40 + i*3);
@@ -359,6 +350,17 @@
           .always(function(){
             $btn.prop('disabled', false).html('<i class="fas fa-sign-in-alt"></i> Masuk');
           });
+      });
+
+      // Lupa password -> pop up info
+      $(document).on('click', '#linkForgot', function (e) {
+        e.preventDefault();
+        Swal.fire({
+          icon: 'info',
+          title: 'Lupa Password',
+          text: 'Silahkan menghubungi admin.',
+          confirmButtonText: 'OK'
+        });
       });
     });
   </script>
