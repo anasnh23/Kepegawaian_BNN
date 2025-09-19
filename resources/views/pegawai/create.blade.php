@@ -12,51 +12,20 @@
   @csrf
 
   <style>
-    :root{
-      --bnn-navy:#0a2647; --bnn-blue:#144272; --bnn-cyan:#2c74b3; --bnn-gold:#f4c430;
-      --ink:#0f172a; --muted:#64748b;
-    }
-    .bnn-section{
-      background:#f8fafc; border:1px solid #e6edf6; border-radius:14px; padding:16px 16px 8px;
-      box-shadow:0 10px 24px rgba(16,24,40,.06); margin-bottom:14px;
-    }
-    .bnn-title{
-      display:inline-flex; align-items:center; gap:10px; margin:-10px 0 10px; padding:6px 12px;
-      background:#e7eef9; color:var(--bnn-navy); border-radius:10px; font-weight:800; letter-spacing:.3px;
-    }
-
-    /* ======= INPUT/SELECT: jelas & sejajar (tidak turun) ======= */
+    :root{ --bnn-navy:#0a2647; --bnn-blue:#144272; --bnn-cyan:#2c74b3; --bnn-gold:#f4c430; --ink:#0f172a; --muted:#64748b; }
+    .bnn-section{ background:#f8fafc; border:1px solid #e6edf6; border-radius:14px; padding:16px 16px 8px; box-shadow:0 10px 24px rgba(16,24,40,.06); margin-bottom:14px; }
+    .bnn-title{ display:inline-flex; align-items:center; gap:10px; margin:-10px 0 10px; padding:6px 12px; background:#e7eef9; color:var(--bnn-navy); border-radius:10px; font-weight:800; letter-spacing:.3px; }
     .form-group{ margin-bottom: .9rem; }
-    .form-control, .custom-select{
-      height:44px;                   /* tinggi seragam */
-      padding: .55rem .9rem;         /* teks center */
-      font-size:.95rem;
-      line-height:1.25;
-      border-radius:10px;
-      border:1px solid #dbe3ef;
-      box-shadow:none;
-      background:#ffffff;
-      color:#0f172a;
-    }
-    .form-control:focus, .custom-select:focus{
-      border-color:var(--bnn-cyan);
-      box-shadow:0 0 0 .18rem rgba(44,116,179,.20);
-    }
+    .form-control, .custom-select{ height:44px; padding:.55rem .9rem; font-size:.95rem; line-height:1.25; border-radius:10px; border:1px solid #dbe3ef; box-shadow:none; background:#fff; color:#0f172a; }
+    .form-control:focus, .custom-select:focus{ border-color:var(--bnn-cyan); box-shadow:0 0 0 .18rem rgba(44,116,179,.20); }
     .form-control::placeholder{ color:#9aa7b5; }
-
     label{ font-weight:700; color:#0b1b31; }
     .hint{ color:var(--muted); font-size:.85rem; }
-
-    /* Upload foto (drag & drop) */
-    .dropzone{
-      background:#0f1b2a; color:#e5e7eb; border:1.5px dashed #35527b; border-radius:14px;
-      min-height:260px; display:flex; align-items:center; justify-content:center; text-align:center; position:relative;
-    }
+    .dropzone{ background:#0f1b2a; color:#e5e7eb; border:1.5px dashed #35527b; border-radius:14px; min-height:260px; display:flex; align-items:center; justify-content:center; text-align:center; position:relative; }
     .dropzone.dragover{ background:#0d2033; border-color:#22d3ee; }
     .dz-choose{ position:absolute; bottom:14px; left:50%; transform:translateX(-50%); }
     .preview{ position:absolute; inset:12px; border-radius:12px; overflow:hidden; display:none; }
     .preview img{ width:100%; height:100%; object-fit:cover; }
-
     .pw-meter{ height:8px; border-radius:10px; background:#e6edf6; overflow:hidden; }
     .pw-meter > div{ height:100%; width:0%; transition:width .2s; }
     .btn-soft{ border-radius:10px; padding:.6rem 1rem; font-weight:800; }
@@ -167,10 +136,12 @@
                 @endforeach
               </select>
             </div>
+
             <div class="form-group col-md-6">
               <label>TMT Jabatan</label>
               <input type="date" name="tmt_jabatan" class="form-control">
             </div>
+
             <div class="form-group col-md-6">
               <label>Pangkat</label>
               <select name="id_ref_pangkat" class="custom-select">
@@ -180,10 +151,22 @@
                 @endforeach
               </select>
             </div>
+
             <div class="form-group col-md-6">
               <label>TMT Pangkat</label>
               <input type="date" name="tmt_pangkat" class="form-control">
             </div>
+
+            {{-- ====== Gaji Pokok (baru) ====== --}}
+            <div class="form-group col-md-6">
+              <label>Gaji Pokok (Rp)</label>
+              <div class="input-group">
+                <div class="input-group-prepend"><span class="input-group-text">Rp</span></div>
+                <input type="number" name="gaji_pokok" id="gaji_pokok" class="form-control" min="0" step="1000" placeholder="0">
+              </div>
+              <small class="hint">Isi nominal gaji pokok saat ini. Bisa dikosongkan jika belum ditetapkan.</small>
+            </div>
+
             <div class="form-group col-md-6">
               <label>Pendidikan</label>
               <select name="jenis_pendidikan" class="custom-select">
@@ -217,13 +200,10 @@
 
 @push('scripts')
 <script>
-  /* ==== BESARKAN MODAL INDUK KE XL agar 2 kolom tidak turun ==== */
+  /* ==== BESARKAN MODAL KE XL ==== */
   (function(){
     const $dlg = $('#modalFormPegawai .modal-dialog');
-    if ($dlg.length) {
-      $dlg.removeClass('modal-sm modal-md modal-lg').addClass('modal-xl');
-    }
-    // (opsional) kembalikan ke LG saat modal ditutup oleh halaman index
+    if ($dlg.length) $dlg.removeClass('modal-sm modal-md modal-lg').addClass('modal-xl');
     $('#modalFormPegawai').one('hidden.bs.modal', function(){
       $('#modalFormPegawai .modal-dialog').removeClass('modal-xl').addClass('modal-lg');
     });
@@ -279,7 +259,7 @@
     }
   })();
 
-  // ====== Reset modal (jangan hapus preview jika ada file) ======
+  // ====== Reset modal ======
   $('#modalFormPegawai').on('show.bs.modal', function(){
     const $f = $('#formCreatePegawai'); if(!$f.length) return;
     $f[0].reset(); $('.is-invalid').removeClass('is-invalid');

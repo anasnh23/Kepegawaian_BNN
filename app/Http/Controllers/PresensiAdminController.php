@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage; // optional, kalau mau cek file
 use App\Models\PresensiModel;
 use App\Models\MUser;
 use Maatwebsite\Excel\Facades\Excel;
@@ -79,7 +80,7 @@ class PresensiAdminController extends Controller
         $data = $q->get();
 
         // =========================
-        // 3b) Konversi koordinat ke alamat
+        // 3b) Konversi koordinat ke alamat (opsional)
         // =========================
         foreach ($data as $row) {
             if (!$row->lokasi && $row->lat_masuk && $row->long_masuk) {
@@ -226,5 +227,5 @@ class PresensiAdminController extends Controller
         } catch (\Exception $e) {
             return null;
         }
-    }
+    }   
 }

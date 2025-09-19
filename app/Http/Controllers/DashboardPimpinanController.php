@@ -21,10 +21,18 @@ class DashboardPimpinanController extends Controller
 
         $cutiMenunggu   = Cuti::where('status', 'Menunggu')->count();
 
-        // === Data chart pangkat ===
+        // === Data chart pangkat (golongan) ===
         $golonganPangkat = DB::table('pangkat')
-            ->join('ref_golongan_pangkat', 'pangkat.id_ref_pangkat', '=', 'ref_golongan_pangkat.id_ref_pangkat')
-            ->select('ref_golongan_pangkat.golongan_pangkat', DB::raw('count(*) as jumlah'))
+            ->join(
+                'ref_golongan_pangkat',
+                'pangkat.id_ref_pangkat',
+                '=',
+                'ref_golongan_pangkat.id_ref_pangkat'
+            )
+            ->select(
+                'ref_golongan_pangkat.golongan_pangkat',
+                DB::raw('count(*) as jumlah')
+            )
             ->groupBy('ref_golongan_pangkat.golongan_pangkat')
             ->pluck('jumlah', 'golongan_pangkat');
 
@@ -34,11 +42,13 @@ class DashboardPimpinanController extends Controller
             ->pluck('total', 'jenis_cuti');
 
         // === Notifikasi terbaru untuk pimpinan login ===
+        // Berisi notifikasi cuti, dokumen, maupun KGP (karena kita sudah tambahkan di PengajuanKgpController)
         $notifications = Notification::where('id_user', Auth::id())
             ->orderByDesc('created_at')
             ->take(5)
             ->get();
 
+        // === Breadcrumb untuk tampilan ===
         $breadcrumb = (object)[
             'title' => 'Dashboard Pimpinan',
             'list'  => ['Dashboard']

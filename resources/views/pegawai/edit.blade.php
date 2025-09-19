@@ -192,6 +192,29 @@
                         <input type="date" id="tmt_pangkat" name="tmt_pangkat" class="form-control"
                                value="{{ optional($pegawai->pangkat)->tmt }}">
                     </div>
+
+                    {{-- ====== Gaji Pokok (Rp) ====== --}}
+                    <div class="form-group col-md-6">
+                        <label for="gaji_pokok_display">Gaji Pokok (Rp)</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">Rp</span>
+                            </div>
+                            {{-- Input tampilan (Rupiah terformat) --}}
+                            <input
+                                type="text"
+                                id="gaji_pokok_display"
+                                class="form-control @error('gaji_pokok') is-invalid @enderror"
+                                inputmode="numeric"
+                                placeholder="0"
+                                value="{{ $pegawai->gaji_pokok ? number_format((int)$pegawai->gaji_pokok, 0, ',', '.') : '' }}"
+                            >
+                            {{-- Nilai murni untuk dikirim ke server --}}
+                            <input type="hidden" id="gaji_pokok" name="gaji_pokok" value="{{ $pegawai->gaji_pokok }}">
+                        </div>
+                        <small class="hint">Masukkan angka saja. Contoh: 5.000.000</small>
+                        @error('gaji_pokok') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                 </div>
             </div>
 
@@ -333,6 +356,34 @@
     reader.readAsDataURL(file);
   });
 
+  // ====== Gaji Pokok: sinkronisasi & format Rupiah ======
+  (function(){
+    const disp = document.getElementById('gaji_pokok_display');
+    const real = document.getElementById('gaji_pokok');
+    if (!disp || !real) return;
+
+    function fmtIDR(n){
+      try { return new Intl.NumberFormat('id-ID').format(n); }
+      catch(_) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    }
+
+    function syncFromDisplay(){
+      const raw = (disp.value || '').replace(/[^\d]/g, '');
+      const clipped = raw.slice(0, 12); // batas 12 digit
+      real.value = clipped.length ? parseInt(clipped, 10) : '';
+      disp.value = clipped ? fmtIDR(clipped) : '';
+    }
+
+    // Inisialisasi agar konsisten jika ada nilai awal
+    syncFromDisplay();
+
+    disp.addEventListener('input', syncFromDisplay);
+    disp.addEventListener('blur', syncFromDisplay);
+
+    // Pastikan sinkron saat submit
+    document.getElementById('formEditPegawai')?.addEventListener('submit', syncFromDisplay);
+  })();
+
   // ====== Validasi ringan sebelum submit ======
   $('#formEditPegawai').on('submit', function(ev){
     // Jika reset aktif, pastikan password ikut terkirim senilai username terkini
@@ -350,3 +401,4 @@
 })();
 </script>
 @endpush
+    

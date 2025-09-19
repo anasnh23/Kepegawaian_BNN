@@ -33,17 +33,36 @@
   .bnn-card .card-header{ background:var(--bnn-navy); color:#fff; font-weight:700; }
 
   /* Table */
-  .table thead th{ background:#0f1f39; color:#eaf2ff; border-color:#0f1f39; }
-  .table td, .table th{ border-color:#e9eef6; }
-  .table-hover tbody tr:hover{ background:#fbfdff; }
   .table-wrap{ max-height:65vh; overflow:auto; border-radius:10px; }
-  .table{ min-width:1150px; }
+  .table{ min-width:1150px; table-layout:auto; }
+  .table thead th{ background:#0f1f39; color:#eaf2ff; border-color:#0f1f39; position:sticky; top:0; z-index:2; }
+  .table td, .table th{ border-color:#e9eef6; vertical-align:middle; }
+  .table-hover tbody tr:hover{ background:#fbfdff; }
 
-  /* Badge */
-  .badge-status{ font-weight:700; border-radius:10px; padding:.35rem .55rem; }
+  /* Kolom lebar tetap agar rapi */
+  th:nth-child(8), td:nth-child(8){ width:130px; } /* Status */
+  th:nth-child(5), td:nth-child(5),
+  th:nth-child(7), td:nth-child(7){ width:100px; } /* Foto */
+
+  /* Badge status: anti wrap, selalu satu baris */
+  .badge-status{
+    display:inline-flex; align-items:center; justify-content:center;
+    white-space:nowrap; line-height:1; font-weight:700;
+    border-radius:999px; padding:.45rem .65rem; min-width:110px;
+    font-size:.85rem;
+  }
   .badge-hadir{ background:#e7f6ec; color:#146c2e; border:1px solid #bfe5c8; }
   .badge-terlambat{ background:#fff7e6; color:#7a4d00; border:1px solid #ffe0ad; }
   .badge-absen{ background:#fdeaea; color:#842029; border:1px solid #f8c2c7; }
+
+  /* Responsif: kecilkan badge di layar sempit */
+  @media (max-width: 992px){
+    .badge-status{ min-width:96px; font-size:.8rem; padding:.35rem .55rem; }
+    .table{ min-width:1000px; }
+  }
+  @media (max-width: 576px){
+    .badge-status{ min-width:86px; font-size:.78rem; }
+  }
 
   /* Thumb */
   .thumb{ width:48px; height:48px; object-fit:cover; border-radius:8px; border:1px solid #e6edf6; cursor:pointer; }
@@ -146,16 +165,16 @@
     <div class="card-body p-0">
       <div class="table-wrap">
         <table class="table table-bordered table-hover text-sm m-0">
-          <thead class="text-center thead-sticky">
+          <thead class="text-center">
             <tr>
-              <th>No</th>
+              <th style="width:60px">No</th>
               <th>Nama</th>
-              <th>Tanggal</th>
-              <th>Jam Masuk</th>
+              <th style="width:120px">Tanggal</th>
+              <th style="width:110px">Jam Masuk</th>
               <th>Foto Masuk</th>
-              <th>Jam Pulang</th>
+              <th style="width:110px">Jam Pulang</th>
               <th>Foto Pulang</th>
-              <th>Status</th>
+              <th style="width:130px">Status</th>
               <th>Lokasi</th>
             </tr>
           </thead>
@@ -168,25 +187,27 @@
                 $statusLabel = $statusKey === 'tidak hadir' ? 'Tidak Hadir' : ucfirst($statusKey);
                 $tgl         = \Carbon\Carbon::parse($row->tanggal)->translatedFormat('d M Y');
                 $nama        = $row->user->nama ?? '-';
-                $fotoMasuk   = $row->foto_masuk ? asset('storage/presensi/'.$row->foto_masuk) : null;
-                $fotoPulang  = $row->foto_pulang ? asset('storage/presensi/'.$row->foto_pulang) : null;
+                $fotoMasuk   = $row->foto_masuk_url;
+                $fotoPulang  = $row->foto_pulang_url;
               @endphp
               <tr data-status="{{ $statusKey }}">
-                <td class="text-center">{{ $i+1 }}</td>
-                <td>{{ $nama }}</td>
+                <td class="text-center">{{ method_exists($data, 'firstItem') ? $data->firstItem() + $i : $i+1 }}</td>
+                <td>{{ e($nama) }}</td>
                 <td>{{ $tgl }}</td>
                 <td class="text-center">{{ $row->jam_masuk ?? '-' }}</td>
-                <td class="text-center">
+                <td class="text-center" style="width:90px">
                   @if($fotoMasuk)
                     <img src="{{ $fotoMasuk }}" class="thumb"
+                         alt="Foto Masuk {{ e($nama) }}"
                          data-toggle="modal" data-target="#imgModal"
                          data-img="{{ $fotoMasuk }}" data-title="Foto Masuk - {{ $nama }} ({{ $tgl }})">
                   @else <span class="text-muted">-</span> @endif
                 </td>
                 <td class="text-center">{{ $row->jam_pulang ?? '-' }}</td>
-                <td class="text-center">
+                <td class="text-center" style="width:90px">
                   @if($fotoPulang)
                     <img src="{{ $fotoPulang }}" class="thumb"
+                         alt="Foto Pulang {{ e($nama) }}"
                          data-toggle="modal" data-target="#imgModal"
                          data-img="{{ $fotoPulang }}" data-title="Foto Pulang - {{ $nama }} ({{ $tgl }})">
                   @else <span class="text-muted">-</span> @endif
@@ -208,15 +229,44 @@
           </tbody>
         </table>
       </div>
+
+      {{-- Pagination --}}
+      @if(method_exists($data, 'links'))
+      <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-top" style="gap:.5rem">
+        <div class="text-muted small mb-2 mb-md-0">
+          @if($data->total() > 0)
+            Menampilkan <strong>{{ $data->firstItem() }}</strong>–<strong>{{ $data->lastItem() }}</strong>
+            dari <strong>{{ $data->total() }}</strong> data
+          @else
+            Tidak ada data
+          @endif
+        </div>
+        <div class="d-flex align-items-center" style="gap:.5rem">
+          {{-- Prev / Next ringkas --}}
+          <a href="{{ $data->previousPageUrl() ?: 'javascript:void(0)' }}"
+             class="btn btn-sm btn-outline-secondary {{ $data->onFirstPage() ? 'disabled' : '' }}">
+            ‹ Sebelumnya
+          </a>
+          <a href="{{ $data->nextPageUrl() ?: 'javascript:void(0)' }}"
+             class="btn btn-sm btn-outline-secondary {{ $data->hasMorePages() ? '' : 'disabled' }}">
+            Berikutnya ›
+          </a>
+        </div>
+      </div>
+      <div class="px-3 pb-3">
+        {{-- Links Laravel + bawa query filter --}}
+        {{ $data->onEachSide(1)->withQueryString()->links() }}
+      </div>
+      @endif
     </div>
   </div>
 
-  {{-- Modal --}}
+  {{-- Modal Preview Gambar --}}
   <div class="modal fade" id="imgModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content" style="border:0; background:transparent;">
         <div class="modal-body text-center">
-          <img src="" class="modal-img" id="previewImg">
+          <img src="" class="modal-img" id="previewImg" alt="Preview">
           <div class="mt-2 p-2 bg-white rounded"
                style="display:inline-block; box-shadow:0 8px 24px rgba(16,24,40,.08)">
             <small id="previewTitle" class="text-muted"></small>
@@ -230,7 +280,7 @@
 
 @push('scripts')
 <script>
-$(document).ready(function(){
+$(function(){
   const form = $('#formFilterExport');
 
   function toggleFields(){
@@ -255,12 +305,11 @@ $(document).ready(function(){
 
   toggleFields();
 
-  // Quick filter
-  const $rows = $('#tbodyPresensi tr');
+  // Quick filter (hanya untuk baris di halaman saat ini)
   function applyFilters(){
     const s = ($('#statusQuick').val()||'').toLowerCase();
     const t = ($('#searchText').val()||'').toLowerCase();
-    $rows.each(function(){
+    $('#tbodyPresensi tr').each(function(){
       const r = $(this);
       const rs = (r.data('status')||'').toLowerCase();
       const rt = r.text().toLowerCase();

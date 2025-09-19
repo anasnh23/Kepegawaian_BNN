@@ -60,17 +60,9 @@ class PimpinanCutiController extends Controller
             return back()->with('error', 'Data approval tidak ditemukan.');
         }
 
-        $approval->status = 'Disetujui';
-        $approval->approved_by = Auth::user()->id_user;
-        $approval->updated_at = now();
-        $approval->save();
+        $this->applyStatus($approval, 'Disetujui');
 
-        $cuti->status = 'Disetujui';
-        $cuti->approved_by = Auth::user()->id_user;
-        $cuti->updated_at = now();
-        $cuti->save();
-
-        // 🔔 Kirim notifikasi ke pegawai
+        // 🔔 Notifikasi ke pegawai
         NotifikasiHelper::send(
             $cuti->id_user,
             'cuti',
@@ -93,17 +85,9 @@ class PimpinanCutiController extends Controller
             return back()->with('error', 'Data approval tidak ditemukan.');
         }
 
-        $approval->status = 'Ditolak';
-        $approval->approved_by = Auth::user()->id_user;
-        $approval->updated_at = now();
-        $approval->save();
+        $this->applyStatus($approval, 'Ditolak');
 
-        $cuti->status = 'Ditolak';
-        $cuti->approved_by = Auth::user()->id_user;
-        $cuti->updated_at = now();
-        $cuti->save();
-
-        // 🔔 Kirim notifikasi ke pegawai
+        // 🔔 Notifikasi ke pegawai
         NotifikasiHelper::send(
             $cuti->id_user,
             'cuti',
@@ -137,7 +121,7 @@ class PimpinanCutiController extends Controller
     }
 
     /**
-     * Update status approval via form (edit).
+     * Update status approval via form (edit) — URL: PUT /approval-dokumen/{id}/update-status
      */
     public function updateStatus(Request $request, $id)
     {
@@ -146,33 +130,66 @@ class PimpinanCutiController extends Controller
         ]);
 
         $approval = ApprovalPimpinan::findOrFail($id);
-        $approval->status = $request->status;
-        $approval->approved_by = Auth::user()->id_user;
-        $approval->updated_at = now();
-        $approval->save();
-
-        $cuti = $approval->cuti;
-        if ($cuti) {
-            $cuti->status = $request->status;
-            $cuti->approved_by = Auth::user()->id_user;
-            $cuti->updated_at = now();
-            $cuti->save();
-
-            $pesan = match($request->status) {
-                'Disetujui' => 'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.',
-                'Ditolak'   => 'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.',
-                default     => 'Dokumen cuti Anda masih <strong>menunggu persetujuan</strong>.'
-            };
-
-            // 🔔 Kirim notifikasi ke pegawai
-            NotifikasiHelper::send(
-                $cuti->id_user,
-                'cuti',
-                $pesan,
-                route('cuti.riwayat')
-            );
-        }
+        $this->applyStatus($approval, $request->status, true);
 
         return redirect()->route('approval.dokumen')->with('success', 'Status cuti berhasil diperbarui.');
+    }
+
+    /**
+     * 🔸 Tambahan: Update status melalui AJAX (tanpa {id} di URL)
+     * URL: POST /approval-dokumen/update-status
+     * Body: { id: <approval_id>, status: Menunggu|Disetujui|Ditolak }
+     */
+    public function updateStatusAjax(Request $request)
+    {
+        $request->validate([
+            'id'     => 'required|integer|exists:approval_pimpinan,id',
+            'status' => 'required|in:Menunggu,Disetujui,Ditolak',
+        ]);
+
+        $approval = ApprovalPimpinan::findOrFail($request->id);
+        $this->applyStatus($approval, $request->status, true);
+
+        return response()->json([
+            'ok'      => true,
+            'message' => 'Status cuti berhasil diperbarui.',
+        ]);
+    }
+
+    /* ===================== UTIL ===================== */
+
+    /**
+     * Terapkan status ke ApprovalPimpinan & sinkron ke tabel cuti + kirim notifikasi.
+     */
+    private function applyStatus(ApprovalPimpinan $approval, string $status, bool $sendNotif = false): void
+    {
+        $approval->status      = $status;
+        $approval->approved_by = Auth::user()->id_user ?? Auth::id();
+        $approval->updated_at  = now();
+        $approval->save();
+
+        // Sinkron ke tabel cuti
+        $cuti = $approval->cuti()->first();
+        if ($cuti) {
+            $cuti->status      = $status;
+            $cuti->approved_by = Auth::user()->id_user ?? Auth::id();
+            $cuti->updated_at  = now();
+            $cuti->save();
+
+            if ($sendNotif) {
+                $pesan = match($status) {
+                    'Disetujui' => 'Dokumen cuti Anda telah <strong>disetujui</strong> oleh pimpinan.',
+                    'Ditolak'   => 'Dokumen cuti Anda telah <strong>ditolak</strong> oleh pimpinan.',
+                    default     => 'Dokumen cuti Anda masih <strong>menunggu persetujuan</strong>.'
+                };
+
+                NotifikasiHelper::send(
+                    $cuti->id_user,
+                    'cuti',
+                    $pesan,
+                    route('cuti.riwayat')
+                );
+            }
+        }
     }
 }

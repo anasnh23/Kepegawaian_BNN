@@ -23,6 +23,10 @@
     $golPangkat   = data_get($pegawai, 'pangkat.refPangkat.golongan_pangkat', null);
     $tmtPangkat   = data_get($pegawai, 'pangkat.tmt', null);
     $tmtPangkatF  = $tmtPangkat ? Carbon::parse($tmtPangkat)->format('d-m-Y') : '-';
+
+    // ===== Gaji Pokok =====
+    $gajiPokok    = data_get($pegawai, 'gaji_pokok', null);
+    $gajiPokokF   = is_null($gajiPokok) ? '-' : ('Rp '.number_format((int)$gajiPokok, 0, ',', '.'));
 @endphp
 
 <style>
@@ -58,6 +62,9 @@
         display:inline-flex; align-items:center; gap:.4rem;
         background: #fff7e9; color:#7a4d00;
         border:1px solid #ffe0ad; border-radius:999px; padding:.25rem .6rem; font-weight:600; font-size:.8rem;
+    }
+    .chip-mint{
+        background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0;
     }
     .bnn-badge{
         background:linear-gradient(180deg, var(--bnn-gold), var(--bnn-gold-deep));
@@ -108,34 +115,26 @@
       @page { size: A4; margin: 14mm 12mm; }
       html, body { background:#fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
-      /* Sembunyikan elemen modal non-konten */
       .modal-header, .modal-footer,
       [data-toggle="tooltip"], .tooltip { display:none !important; }
 
-      /* Area yang dicetak full width, rapi, tanpa shadow */
       #bnnPrintable { box-shadow:none !important; background:#fff !important; }
       .profile-card, .info-card { box-shadow:none !important; border-color:#d9e1ef !important; }
       .info-card .heading { background:#eef3ff !important; }
 
-      /* Hilangkan watermark header agar tidak menutupi */
       .bnn-header::after { display:none !important; }
 
-      /* Pastikan foto tampil penuh */
       img { max-width:100% !important; filter:none !important; }
 
-      /* Tampilkan semua tab-pane saat print, sembunyikan navnya */
       .tab-content .tab-pane { display:block !important; opacity:1 !important; visibility:visible !important; }
       .nav-pills, .nav-tabs { display:none !important; list-style:none !important; }
 
-      /* Warna badge/label tetap tercetak */
       .badge, .bnn-badge, .chip { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-shadow:none !important; }
 
-      /* Rapikan grid */
       .kv { grid-template-columns: 38% 62% !important; border-bottom:1px solid #eef2f7 !important; }
       .kv .k { background:#f6f8ff !important; }
     }
 
-    /* Mode bantuan via class (dipakai JS) */
     body.print-mode .modal-header,
     body.print-mode .modal-footer,
     body.print-mode [data-toggle="tooltip"]{ display:none !important; }
@@ -171,9 +170,17 @@
                     <h5 class="mb-1 text-dark" style="font-weight:800">{{ $nama }}</h5>
                     <div class="text-muted small mb-2" id="nipText">{{ $nip }}</div>
 
-                    <div class="mb-3">
+                    <div class="mb-2">
                         <span class="bnn-badge" data-toggle="tooltip" title="Level Pengguna">
                             <i class="fas fa-shield-alt mr-1"></i>{{ $levelName }}
+                        </span>
+                    </div>
+
+                    {{-- Ringkasan gaji (chip kecil) --}}
+                    <div class="mb-3">
+                        <span class="chip chip-mint" data-toggle="tooltip" title="Gaji Pokok Saat Ini">
+                            <i class="fas fa-money-bill-wave"></i>
+                            {{ $gajiPokokF }}
                         </span>
                     </div>
 
@@ -255,6 +262,17 @@
                                 <div class="kv">
                                     <div class="k">Level Akses</div>
                                     <div class="v"><span class="bnn-badge">{{ $levelName }}</span></div>
+                                </div>
+                                {{-- ====== Gaji Pokok (baru) ====== --}}
+                                <div class="kv">
+                                    <div class="k">Gaji Pokok</div>
+                                    <div class="v">
+                                        @if($gajiPokokF !== '-')
+                                            <span class="badge badge-primary px-2 py-1">{{ $gajiPokokF }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>

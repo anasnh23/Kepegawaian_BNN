@@ -49,16 +49,16 @@ public function create()
 
 
 
-  public function store(Request $request)
+ public function store(Request $request)
 {
     $request->validate([
-        'nip' => 'required|unique:m_user,nip',
-        'nama' => 'required',
-        'email' => 'required|email|unique:m_user,email',
-        'password' => 'required|min:3',
-        'id_level' => 'required|exists:m_level,id_level',
+        'nip'           => 'required|unique:m_user,nip',
+        'nama'          => 'required',
+        'email'         => 'required|email|unique:m_user,email',
+        'password'      => 'required|min:3',
+        'id_level'      => 'required|exists:m_level,id_level',
         'jenis_kelamin' => 'required|in:L,P',
-        'foto' => 'nullable|image|max:2048',
+        'foto'          => 'nullable|image|max:2048',
     ]);
 
     $foto = null;
@@ -66,51 +66,58 @@ public function create()
         $foto = $request->file('foto')->store('foto', 'public');
     }
 
+    // === SIMPAN PEGAWAI ===
     $user = MUser::create([
-        'id_level' => $request->id_level,
-        'nip' => $request->nip,
-        'email' => $request->email,
-        'nama' => $request->nama,
-        'username' => $request->username ?? $request->nip,
-        'password' => Hash::make($request->password),
+        'id_level'      => $request->id_level,
+        'nip'           => $request->nip,
+        'email'         => $request->email,
+        'nama'          => $request->nama,
+        'username'      => $request->username ?? $request->nip,
+        'password'      => Hash::make($request->password),
         'jenis_kelamin' => $request->jenis_kelamin,
-        'agama' => $request->agama,
-        'no_tlp' => $request->no_tlp,
-        'foto' => $foto,
+        'agama'         => $request->agama,
+        'no_tlp'        => $request->no_tlp,
+        'foto'          => $foto,
     ]);
 
-    // simpan pendidikan jika ada
+    // === SIMPAN PENDIDIKAN ===
     if ($request->jenis_pendidikan) {
         PendidikanModel::create([
-            'id_user' => $user->id_user,
-            'jenis_pendidikan' => $request->jenis_pendidikan,
+            'id_user'         => $user->id_user,
+            'jenis_pendidikan'=> $request->jenis_pendidikan,
             'tahun_kelulusan' => $request->tahun_kelulusan,
         ]);
     }
 
-if ($request->id_ref_jabatan && $request->tmt_jabatan) {
-    JabatanModel::create([
-        'id_user' => $user->id_user,
-        'id_ref_jabatan' => $request->id_ref_jabatan,
-        'tmt' => $request->tmt_jabatan,
-    ]);
+    // === SIMPAN JABATAN ===
+    if ($request->id_ref_jabatan && $request->tmt_jabatan) {
+        JabatanModel::create([
+            'id_user'        => $user->id_user,
+            'id_ref_jabatan' => $request->id_ref_jabatan,
+            'tmt'            => $request->tmt_jabatan,
+        ]);
+    }
+
+    // === SIMPAN PANGKAT + GAJI ===
+    if ($request->id_ref_pangkat && $request->tmt_pangkat) {
+        $pangkat = Pangkat::create([
+            'id_user'        => $user->id_user,
+            'id_ref_pangkat' => $request->id_ref_pangkat,
+            'id_jabatan'     => null,
+            'gaji_pokok'     => $request->gaji_pokok ?? 0, // <== tambahkan gaji pokok di sini
+        ]);
+
+        // Simpan KGP
+        Kgp::create([
+            'id_user'   => $user->id_user,
+            'tahun_kgp' => date('Y', strtotime($request->tmt_pangkat)),
+            'tmt'       => $request->tmt_pangkat,
+        ]);
+    }
+
+    return redirect()->route('pegawai.index')->with('success', 'Data pegawai berhasil disimpan');
 }
 
-if ($request->id_ref_pangkat && $request->tmt_pangkat) {
-    Pangkat::create([
-        'id_user' => $user->id_user,
-        'id_ref_pangkat' => $request->id_ref_pangkat,
-        'id_jabatan' => null, // Jika kolom ini diperlukan
-    ]);
-
-    // Simpan KGP juga
-    Kgp::create([
-        'id_user' => $user->id_user,
-        'tahun_kgp' => date('Y', strtotime($request->tmt_pangkat)),
-        'tmt' => $request->tmt_pangkat,
-    ]);
-}
-}
 
 
 public function edit($id)

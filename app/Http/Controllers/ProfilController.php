@@ -20,10 +20,12 @@ class ProfilController extends Controller
         $user = MUser::with([
             'level',
             'jabatan.refJabatan',
-            'pangkat.refPangkat'
+            'pangkat.refPangkat',
+            'gajiTerakhir',
+            'kgp',
         ])->findOrFail(Auth::id());
 
-        // 🔹 Cari TMT awal dari riwayat_jabatan
+        // ====== perhitungan lama kamu (dipertahankan) ======
         $riwayatAwal = DB::table('riwayat_jabatan')
             ->where('id_user', $user->id_user)
             ->orderBy('tmt_mulai', 'asc')
@@ -33,13 +35,50 @@ class ProfilController extends Controller
         $masaKerjaBulan = 0;
 
         if ($riwayatAwal && $riwayatAwal->tmt_mulai) {
-            $tmt = Carbon::parse($riwayatAwal->tmt_mulai);
+            $tmt  = Carbon::parse($riwayatAwal->tmt_mulai);
             $diff = $tmt->diff(Carbon::now());
             $masaKerjaTahun = $diff->y;
             $masaKerjaBulan = $diff->m;
         }
 
-        return view('profil.show', compact('user', 'masaKerjaTahun', 'masaKerjaBulan'));
+        // ====== tambahan: pakai accessor dari MUser ======
+        $masaKerjaLabel  = $user->masa_kerja_label;         // "X th Y bln"
+        $masaKerjaDetail = $user->masa_kerja_detail_label;  // "X th Y bln Z hr"
+        $gajiPokok       = $user->gaji_pokok;               // integer / null
+        $gajiPokokF      = $user->gaji_pokok_formatted;     // "Rp x.xxx.xxx" / "-"
+
+        /**
+         * ===== TMK versi KGP =====
+         * Kebijakan: TMK = (jumlah tahap KGP disetujui) * KGP_NAIK_PER_4_TAHUN
+         * - Hitung jumlah baris di tabel riwayat_gaji untuk user tsb (artinya tahap KGP yang sudah disetujui).
+         * - Default per tahap = 1.000.000 (bisa diubah di .env).
+         */
+        $tmkPerStage     = (int) env('KGP_NAIK_PER_4_TAHUN', 1000000);
+        $approvedStages  = (int) DB::table('riwayat_gaji')->where('id_user', $user->id_user)->count();
+        $tunjanganMk     = $approvedStages * $tmkPerStage;           // angka murni
+        $tunjanganMkF    = 'Rp ' . number_format($tunjanganMk, 0, ',', '.');  // untuk tampilan
+
+        // NOTE:
+        // Variabel lama $tunjanganMkSafeF (berbasis accessor is_tmk_approved) tidak dipakai lagi
+        // supaya konsisten dengan halaman KGP. Jika Blade lama masih memanggil itu, ganti ke $tunjanganMkF.
+
+        return view('profil.show', compact(
+            'user',
+
+            // variabel lama (tetap dipertahankan)
+            'masaKerjaTahun',
+            'masaKerjaBulan',
+            'gajiPokok',
+            'gajiPokokF',
+
+            // variabel tambahan untuk UI baru
+            'masaKerjaLabel',
+            'masaKerjaDetail',
+
+            // TMK berbasis KGP
+            'tunjanganMk',
+            'tunjanganMkF',
+        ));
     }
 
     /**
@@ -50,7 +89,8 @@ class ProfilController extends Controller
         $user = MUser::with([
             'level',
             'jabatan.refJabatan',
-            'pangkat.refPangkat'
+            'pangkat.refPangkat',
+            'gajiTerakhir',
         ])->findOrFail(Auth::id());
 
         return view('profil.edit', compact('user'));
@@ -85,20 +125,20 @@ class ProfilController extends Controller
 
         // Validasi form data diri
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'email' => 'required|email',
-            'no_tlp' => 'nullable|string|max:20',
+            'nama'          => 'required|string|max:255',
+            'email'         => 'required|email',
+            'no_tlp'        => 'nullable|string|max:20',
             'jenis_kelamin' => 'required|in:L,P',
-            'agama' => 'nullable|string|max:50',
-            'foto' => 'nullable|mimes:jpg,jpeg,png,webp,heic,heif|max:2048',
+            'agama'         => 'nullable|string|max:50',
+            'foto'          => 'nullable|mimes:jpg,jpeg,png,webp,heic,heif|max:2048',
         ]);
 
         // Simpan data
-        $user->nama = $request->nama;
-        $user->email = $request->email;
-        $user->no_tlp = $request->no_tlp;
+        $user->nama          = $request->nama;
+        $user->email         = $request->email;
+        $user->no_tlp        = $request->no_tlp;
         $user->jenis_kelamin = $request->jenis_kelamin;
-        $user->agama = $request->agama;
+        $user->agama         = $request->agama;
 
         // Upload foto via form
         if ($request->hasFile('foto')) {
@@ -127,7 +167,7 @@ class ProfilController extends Controller
 
         $request->validate([
             'old_password' => 'required',
-            'password' => 'required|min:3|confirmed',
+            'password'     => 'required|min:3|confirmed',
         ]);
 
         if (!Hash::check($request->old_password, $user->password)) {

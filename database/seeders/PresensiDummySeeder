@@ -1,0 +1,85 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use App\Models\PresensiModel;
+use App\Models\MUser; // pastikan model ini ada dan mapping ke tabel m_user
+use Carbon\Carbon;
+
+class PresensiDummySeeder extends Seeder
+{
+    public function run(): void
+    {
+        // Ambil semua user aktif yang ingin di-seed
+        // Sesuaikan kalau nama model/kolom berbeda
+        $users = MUser::select('id_user', 'nama')->get();
+
+        // Periode 1 Juli 2025 s/d 31 Agustus 2025
+        $start = Carbon::create(2025, 7, 1)->startOfDay();
+        $end   = Carbon::create(2025, 8, 31)->endOfDay();
+
+        foreach ($users as $user) {
+            $date = $start->copy();
+
+            while ($date->lte($end)) {
+                // Hanya Senin–Jumat (skip Sabtu & Minggu)
+                if ($date->isSaturday() || $date->isSunday()) {
+                    $date->addDay();
+                    continue;
+                }
+
+                // Tentukan status acak
+                $status = collect(['hadir','terlambat','dinas_luar'])->random();
+
+                // Jam masuk (hadir ~07:50–07:59 | terlambat ~08:20–08:59 | dinas_luar ~08:00–08:30)
+                if ($status === 'terlambat') {
+                    $jamMasuk = $date->copy()->setTime(8, rand(20, 59), rand(0,59));
+                } elseif ($status === 'dinas_luar') {
+                    $jamMasuk = $date->copy()->setTime(8, rand(0, 30), rand(0,59));
+                } else { // hadir
+                    $jamMasuk = $date->copy()->setTime(7, rand(50, 59), rand(0,59));
+                }
+
+                // Jam pulang (~16:00–16:59)
+                $jamPulang = $date->copy()->setTime(16, rand(0, 59), rand(0,59));
+
+                // Lokasi
+                $lokasi = $status === 'dinas_luar'
+                    ? 'Kunjungan Dinas — Kediri / Surabaya'
+                    : 'Kantor BNN Kediri';
+
+                // Koordinat (dummy)
+                $lat = -7.809739;
+                $lng = 111.975466;
+
+                // Foto (dummy path; tidak harus ada filenya)
+                $fotoMasuk  = 'presensi/dummy_masuk.jpg';
+                $fotoPulang = 'presensi/dummy_pulang.jpg';
+
+                // Gunakan upsert agar aman kalau constraint UNIQUE (id_user, tanggal) sudah dipasang
+                PresensiModel::updateOrCreate(
+                    ['id_user' => $user->id_user, 'tanggal' => $date->toDateString()],
+                    [
+                        'jam_masuk'  => $jamMasuk->format('H:i:s'),
+                        'lat_masuk'  => $lat,
+                        'long_masuk' => $lng,
+                        'foto_masuk' => $fotoMasuk,
+
+                        'jam_pulang'  => $jamPulang->format('H:i:s'),
+                        'lat_pulang'  => $lat,
+                        'long_pulang' => $lng,
+                        'foto_pulang' => $fotoPulang,
+
+                        'status' => $status,
+                        'lokasi' => $lokasi,
+                    ]
+                );
+
+                $date->addDay();
+            }
+        }
+    }
+}
+    

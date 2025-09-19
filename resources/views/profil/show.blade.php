@@ -17,30 +17,26 @@
     /* =========================
        FIX “BERCAK PUTIH” SIDEBAR
        ========================= */
-    /* Sidebar selalu di atas layer konten */
     .main-sidebar{ z-index:1050; position:relative; }
     .content-wrapper{ position:relative; z-index:1; }
 
-    /* Hilangkan kemungkinan background putih pada ikon/elemen kanan item menu */
     .nav-sidebar .nav-link .right,
     .nav-sidebar .nav-link .badge,
     .nav-sidebar .nav-link .float-right{
         background: transparent !important;
         box-shadow: none !important;
     }
-    /* Rapikan teks sidebar agar tidak membentuk blok aneh */
     .nav-sidebar .nav-link{
         overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
     }
 
-    /* Batasi style halaman ini agar tidak bocor ke luar (sidebar/header) */
     .stage *{ box-sizing:border-box; }
 
     /* ====== Latar aurora ====== */
     .stage{
         position:relative; padding:28px 16px; overflow:hidden;
         background:#071a2f;
-        isolation:isolate; /* mencegah pseudo/glow menimpa sidebar */
+        isolation:isolate;
     }
     .aurora, .aurora::before, .aurora::after{
         position:absolute; inset:auto; filter:blur(40px); opacity:.55; pointer-events:none;
@@ -56,26 +52,20 @@
       0%,100%{ transform:translateY(0) rotate(0deg) }
       50%{ transform:translateY(-20px) rotate(3deg) }
     }
-    @media (prefers-reduced-motion: reduce){
-      .aurora,.aurora::before,.aurora::after{ animation:none; }
-    }
 
-    /* ====== Kartu hero (glassmorphism + border glow) ====== */
     .hero{
         position:relative; border-radius:26px; overflow:hidden; color:#fff;
         background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.06));
-        backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
         border:1px solid var(--stroke);
         box-shadow: 0 30px 90px rgba(0,0,0,.45);
-        z-index:1; /* pastikan berada di bawah sidebar */
+        z-index:1;
     }
     .hero::before{
-        content:""; position:absolute; inset:0; z-index:0; pointer-events:none;
-        /* Jika pattern.svg tidak ada, hapus baris background di bawah ini */
+        content:""; position:absolute; inset:0; z-index:0;
         background: url("{{ asset('adminlte/dist/img/pattern.svg') }}") center/620px repeat;
         opacity:.06;
     }
-    /* animated gradient border ring */
     .hero::after{
         content:""; position:absolute; inset:-2px; z-index:-1; border-radius:28px;
         background: conic-gradient(from 0deg, #60a5fa, #22d3ee, #a5b4fc, #60a5fa);
@@ -83,7 +73,6 @@
     }
     @keyframes spin{ to{ transform: rotate(360deg); } }
 
-    /* ====== Layout ====== */
     .row-hero{ display:flex; flex-wrap:wrap; position:relative; z-index:1; }
     .left{
         flex:0 0 360px; padding:44px 26px; text-align:center; position:relative;
@@ -94,7 +83,6 @@
         flex:1; background:#ffffff; color:var(--ink); padding:34px 28px;
     }
 
-    /* ====== Avatar + ring ====== */
     .avatar-wrap{
         position:relative; width:184px; height:184px; margin:0 auto 14px; border-radius:50%;
         padding:7px; background:linear-gradient(180deg, rgba(255,255,255,.28), rgba(255,255,255,.06));
@@ -124,7 +112,6 @@
         font-weight:700; font-size:.85rem; color:#eaf2ff;
     }
 
-    /* ====== Meta cards (Jabatan/Pangkat) ====== */
     .meta-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
     .meta{
         padding:14px; border-radius:14px;
@@ -132,47 +119,32 @@
         border:1px solid #e7eef8;
         box-shadow:0 10px 22px rgba(16,24,40,.08);
     }
-    .meta .t{ font-size:.78rem; color:#0a2647; font-weight:800; letter-spacing:.3px; text-transform:uppercase; }
+    .meta .t{ font-size:.78rem; color:#0a2647; font-weight:800; text-transform:uppercase; }
     .meta .v{ font-weight:900; color:#1e293b; font-size:1.05rem; margin-top:2px; }
 
-    /* ====== Quick actions ====== */
     .quick{ display:flex; flex-direction:column; gap:12px; margin-top:20px; }
-    .btn-pill{
-        border:none; border-radius:14px; padding:12px 16px; font-weight:800;
+    .btn-pill{ border:none; border-radius:14px; padding:12px 16px; font-weight:800;
         display:flex; align-items:center; justify-content:center; gap:10px;
-        box-shadow:0 14px 28px rgba(16,24,40,.18);
-        transition: transform .08s ease, filter .2s ease;
+        box-shadow:0 14px 28px rgba(16,24,40,.18); transition: transform .08s ease, filter .2s ease;
     }
     .btn-pill:hover{ transform:translateY(-1px); filter:brightness(1.03); }
     .btn-edit{ background: linear-gradient(135deg, #ffd76a, var(--bnn-gold)); color:#3a2a00; }
     .btn-print{ background: linear-gradient(135deg, #e2e8f0, #ffffff); color:#0a2647; border:1px solid #e2e8f0; }
     .btn-back { background:#111827; color:#fff; }
 
-    /* ====== Right content ====== */
-    .title{
-        display:inline-flex; align-items:center; gap:10px; padding:8px 14px;
-        background:#e7eef9; color:#0a2647; border-radius:12px; font-weight:900; letter-spacing:.3px;
-    }
-    .grid{
-        display:grid; grid-template-columns:1fr 1fr; gap:18px 22px; margin-top:18px;
-    }
-    .info{
-        background:#ffffff; border:1px solid #eef2f6; border-radius:16px; padding:14px 16px;
-        box-shadow:0 12px 24px rgba(16,24,40,.06); transition: transform .08s ease;
-    }
-    .info:hover{ transform: translateY(-2px); }
-    .label{ font-size:.75rem; color:var(--muted); font-weight:800; letter-spacing:.35px; text-transform:uppercase; }
+    .title{ display:inline-flex; align-items:center; gap:10px; padding:8px 14px;
+        background:#e7eef9; color:#0a2647; border-radius:12px; font-weight:900; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px 22px; margin-top:18px; }
+    .info{ background:#ffffff; border:1px solid #eef2f6; border-radius:16px; padding:14px 16px;
+        box-shadow:0 12px 24px rgba(16,24,40,.06); }
+    .label{ font-size:.75rem; color:var(--muted); font-weight:800; text-transform:uppercase; }
     .value{ font-size:1rem; color:var(--ink); font-weight:700; margin-top:4px; display:flex; align-items:center; gap:8px; }
 
-    .copy-btn{
-        margin-left:auto; border-radius:8px; padding:4px 8px; font-size:.78rem;
-        border:1px solid #e4e7ec; background:#f9fafb; color:#111827;
-    }
+    .copy-btn{ margin-left:auto; border-radius:8px; padding:4px 8px; font-size:.78rem;
+        border:1px solid #e4e7ec; background:#f9fafb; color:#111827; }
 
     .footnote{ color:#667085; font-size:.9rem; margin-top:10px; }
 
-    /* ====== Responsive ====== */
-    @media (max-width: 1100px){ .left{ flex:0 0 320px; } }
     @media (max-width: 992px){
         .row-hero{ flex-direction:column; }
         .left{ border-right:0; border-bottom:1px dashed rgba(255,255,255,.18); }
@@ -267,6 +239,45 @@
                     <div class="info">
                         <div class="label">Golongan/Pangkat</div>
                         <div class="value"><i class="fas fa-user-shield"></i> {{ $user->pangkat->refPangkat->golongan_pangkat ?? '-' }}</div>
+                    </div>
+
+                    <!-- 🔹 Gaji Pokok -->
+                    <div class="info">
+                        <div class="label">Gaji Pokok</div>
+                        <div class="value"><i class="fas fa-money-bill-wave"></i> {{ $gajiPokokF ?? '-' }}</div>
+                    </div>
+
+                    <!-- 🔹 Masa Kerja -->
+                    <div class="info">
+                        <div class="label">Masa Kerja</div>
+                        <div class="value">
+                            <i class="fas fa-hourglass-half"></i>
+                            {{ $masaKerjaLabel ?? (($masaKerjaTahun ?? 0) . ' th ' . ($masaKerjaBulan ?? 0) . ' bln') }}
+                        </div>
+                    </div>
+
+                    <!-- 🔹 Tunjangan Masa Kerja -->
+                    <div class="info">
+                        <div class="label">Tunjangan Masa Kerja</div>
+                        <div class="value" style="display:flex;flex-direction:column;gap:6px;">
+                            <span>
+                                <i class="fas fa-coins"></i>
+                                {{ $tunjanganMkSafeF ?? '-' }}
+                                @if(method_exists($user,'getIsTmkApprovedAttribute') && !$user->is_tmk_approved)
+                                    <span class="badge badge-warning ml-2" title="Menunggu persetujuan pimpinan">Menunggu persetujuan</span>
+                                @endif
+                            </span>
+
+                            {{-- ✅ Tambahan (tanpa mengubah yang lama):
+                                 Jika controller juga mengirim $tunjanganMkF (akumulasi TMK yang sudah disetujui),
+                                 tampilkan sebagai baris info tambahan. --}}
+                            @isset($tunjanganMkF)
+                                <span style="font-size:.92rem;color:#475569;margin-left:24px;">
+                                    <i class="fas fa-check-circle"></i>
+                                    TMK disetujui: <strong>{{ $tunjanganMkF }}</strong>
+                                </span>
+                            @endisset
+                        </div>
                     </div>
                 </div>
 

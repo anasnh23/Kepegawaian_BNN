@@ -42,7 +42,7 @@
         </a>
       </li>
 
-      {{-- Tambahan Submenu Presensi Dinas Luar --}}
+      {{-- Presensi Dinas Luar --}}
       <li class="nav-item">
         <a href="{{ url('/presensi-dinas') }}" class="nav-link {{ $activeMenu == 'presensi-dinas' ? 'active' : '' }}">
           <i class="fas fa-map-marked-alt nav-icon text-warning"></i>
@@ -50,6 +50,7 @@
         </a>
       </li>
 
+      {{-- Cuti --}}
       <li class="nav-item">
         <a href="{{ url('/cutipegawai') }}" class="nav-link {{ $activeMenu == 'cuti' ? 'active' : '' }}">
           <i class="fas fa-calendar-check nav-icon text-primary"></i>
@@ -63,9 +64,20 @@
         </a>
       </li>
 
+      {{-- Pengajuan KGP (baru) --}}
+      <li class="nav-item">
+        <a href="{{ url('/kgp/pengajuan') }}" class="nav-link {{ $activeMenu == 'pengajuan-kgp' ? 'active' : '' }}">
+          <i class="fas fa-money-check-alt nav-icon text-warning"></i>
+          <p>Pengajuan KGP</p>
+        </a>
+      </li>
+
       {{-- Submenu Manajemen Kepegawaian (Pegawai) --}}
-      <li class="nav-item {{ in_array($activeMenu, ['laporan-gaji','riwayat_gaji','riwayat-jabatan']) ? 'menu-open' : '' }}">
-        <a href="#" class="nav-link {{ in_array($activeMenu, ['laporan-gaji','riwayat_gaji','riwayat-jabatan']) ? 'active' : '' }}">
+      @php
+        $pegawaiSub = ['laporan-gaji','kgp_riwayat_gaji','riwayat-jabatan'];
+      @endphp
+      <li class="nav-item {{ in_array($activeMenu, $pegawaiSub) ? 'menu-open' : '' }}">
+        <a href="#" class="nav-link {{ in_array($activeMenu, $pegawaiSub) ? 'active' : '' }}">
           <i class="nav-icon fas fa-user-shield"></i>
           <p>
             Manajemen Kepegawaian
@@ -79,10 +91,11 @@
               <p>Laporan Gaji</p>
             </a>
           </li>
+          {{-- Ganti Riwayat Gaji → KGP • Riwayat Gaji --}}
           <li class="nav-item">
-            <a href="{{ url('/riwayat_gaji') }}" class="nav-link {{ $activeMenu == 'riwayat_gaji' ? 'active' : '' }}">
+            <a href="{{ url('/kgp/riwayat') }}" class="nav-link {{ $activeMenu == 'kgp_riwayat_gaji' ? 'active' : '' }}">
               <i class="fas fa-money-bill nav-icon"></i>
-              <p>Riwayat Gaji</p>
+              <p>KGP • Riwayat Gaji</p>
             </a>
           </li>
           <li class="nav-item">
@@ -117,13 +130,13 @@
       </li>
     @endif
 
-    {{-- ================= Menu Admin (Data Pegawai + submenu) ================= --}}
+    {{-- ================= Menu Admin ================= --}}
     @if(Auth::user()->id_level == 1)
       @php
         $adminMenus = [
           'pegawai','pegawai-index','pegawai-tambah','pegawai-tetap','pegawai-outsourcing','pegawai-magang',
           'presensi-admin','cuti','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp',
-          'riwayat_gaji','pendidikan','laporan-gaji'
+          'kgp_riwayat_gaji','pendidikan','laporan-gaji'
         ];
       @endphp
 
@@ -137,43 +150,14 @@
         </a>
 
         <ul class="nav nav-treeview">
-          {{-- Data Pegawai --}}
-          <li class="nav-item {{ in_array($activeMenu, ['pegawai','pegawai-index','pegawai-tambah','pegawai-tetap','pegawai-outsourcing','pegawai-magang']) ? 'menu-open' : '' }}">
-            <a href="#" class="nav-link {{ in_array($activeMenu, ['pegawai','pegawai-index','pegawai-tambah','pegawai-tetap','pegawai-outsourcing','pegawai-magang']) ? 'active' : '' }}">
-              <i class="fas fa-id-badge nav-icon"></i>
-              <p>
-                Data Pegawai
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="{{ url('/pegawai') }}" class="nav-link {{ in_array($activeMenu, ['pegawai','pegawai-index']) ? 'active' : '' }}">
-                  <i class="fas fa-th-list nav-icon"></i>
-                  <p>Semua</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url('/pegawai/tetap') }}" class="nav-link {{ $activeMenu == 'pegawai-tetap' ? 'active' : '' }}">
-                  <i class="fas fa-id-badge nav-icon"></i>
-                  <p>Tetap</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url('/pegawai/outsourcing') }}" class="nav-link {{ $activeMenu == 'pegawai-outsourcing' ? 'active' : '' }}">
-                  <i class="fas fa-handshake nav-icon"></i>
-                  <p>Outsourcing</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url('/pegawai/magang') }}" class="nav-link {{ $activeMenu == 'pegawai-magang' ? 'active' : '' }}">
-                  <i class="fas fa-user-clock nav-icon"></i>
-                  <p>Magang</p>
-                </a>
-              </li>
-            </ul>
-          </li>
-          {{-- /Data Pegawai --}}
+{{-- Data Pegawai --}}
+<li class="nav-item">
+  <a href="{{ route('pegawai.index') }}" class="nav-link {{ $activeMenu=='pegawai' ? 'active' : '' }}">
+    <i class="fas fa-id-badge nav-icon"></i>
+    <p>Data Pegawai</p>
+  </a>
+</li>
+{{-- /Data Pegawai --}}
 
           <li class="nav-item">
             <a href="{{ url('/presensi-admin') }}" class="nav-link {{ $activeMenu == 'presensi-admin' ? 'active' : '' }}">
@@ -217,10 +201,11 @@
               <p>Kenaikan Gaji Berkala</p>
             </a>
           </li>
+          {{-- Ganti Riwayat Gaji → KGP • Riwayat Gaji --}}
           <li class="nav-item">
-            <a href="{{ url('/riwayat_gaji') }}" class="nav-link {{ $activeMenu == 'riwayat_gaji' ? 'active' : '' }}">
+            <a href="{{ url('/kgp/riwayat') }}" class="nav-link {{ $activeMenu == 'kgp_riwayat_gaji' ? 'active' : '' }}">
               <i class="fas fa-money-bill-wave nav-icon"></i>
-              <p>Riwayat Gaji</p>
+              <p>KGP • Riwayat Gaji</p>
             </a>
           </li>
           <li class="nav-item">
