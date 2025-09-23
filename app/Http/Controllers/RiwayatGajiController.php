@@ -21,14 +21,14 @@ class RiwayatGajiController extends Controller
             $riwayatGajis = RiwayatGajiModel::with('user')->get();
             $breadcrumb = (object)[
                 'title' => 'Riwayat Gaji Semua Pegawai',
-                'list' => ['Dashboard', 'Kepegawaian', 'Riwayat Gaji']
+                'list'  => ['Dashboard', 'Kepegawaian', 'Riwayat Gaji']
             ];
         } else {
             // Non-admin: Tampilkan hanya milik sendiri
             $riwayatGajis = RiwayatGajiModel::with('user')->where('id_user', $user->id_user)->get();
             $breadcrumb = (object)[
                 'title' => 'Riwayat Gaji Saya',
-                'list' => ['Dashboard', 'Kepegawaian', 'Riwayat Gaji']
+                'list'  => ['Dashboard', 'Kepegawaian', 'Riwayat Gaji']
             ];
         }
 
@@ -42,16 +42,11 @@ class RiwayatGajiController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
-        
-        if ($user->id_level == 1) {
-            // Admin: Bisa pilih user mana saja
-            $users = MUser::all();
-        } else {
-            // Non-admin: Hanya bisa untuk diri sendiri
-            $users = MUser::where('id_user', $user->id_user)->get();
+        if (Auth::user()->id_level != 1) {
+            abort(403); // Hanya admin boleh create
         }
-        
+
+        $users = MUser::all(); // Untuk select user di form
         return view('riwayat_gaji.create', compact('users'));
     }
 
@@ -60,109 +55,115 @@ class RiwayatGajiController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
-        
-        // Validation to match model's fillable fields
-        $request->validate([
-            'id_user' => 'required|exists:m_user,id_user', 
-            'tanggal_berlaku' => 'required|date',
-            'gaji_pokok' => 'required|integer',
-            'keterangan' => 'nullable|string',
-        ]);
-
-        // Jika bukan admin, pastikan hanya bisa menambah data untuk diri sendiri
-        if ($user->id_level != 1 && $request->id_user != $user->id_user) {
-            return response()->json(['error' => 'Anda tidak memiliki akses untuk menambah data user lain.'], 403);
+        if (Auth::user()->id_level != 1) {
+            abort(403); // Hanya admin boleh store
         }
 
-        RiwayatGajiModel::create($request->all());
+        // Validasi sesuai field fillable pada model
+        $request->validate([
+            'id_user'          => 'required|exists:m_user,id_user',
+            'tanggal_berlaku'  => 'required|date',
+            'gaji_pokok'       => 'required|numeric',
+            'keterangan'       => 'nullable|string'
+        ]);
 
-        return response()->json(['success' => 'Riwayat Gaji berhasil ditambahkan.']);
+        RiwayatGajiModel::create($request->only([
+            'id_user', 'tanggal_berlaku', 'gaji_pokok', 'keterangan'
+        ]));
+
+        // Response JSON untuk AJAX
+        return response()->json(['success' => 'Riwayat gaji berhasil ditambahkan.']);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(RiwayatGajiModel $riwayatGaji)
+    public function show($id)
     {
-        $user = Auth::user();
-        
-        // Jika bukan admin, pastikan hanya bisa melihat data milik sendiri
-        if ($user->id_level != 1 && $riwayatGaji->id_user != $user->id_user) {
-            abort(403, 'Anda tidak memiliki akses untuk melihat data ini.');
+        $riwayatGaji = RiwayatGajiModel::find($id);
+
+        if (!$riwayatGaji) {
+            return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
-        
-        $riwayatGaji->load('user');
+
+        // Non-admin hanya boleh melihat miliknya sendiri
+        if (Auth::user()->id_level != 1 && $riwayatGaji->id_user != Auth::user()->id_user) {
+            abort(403);
+        }
+
+        $riwayatGaji->load('user'); // muat relasi jika diperlukan
+
         return view('riwayat_gaji.show', compact('riwayatGaji'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(RiwayatGajiModel $riwayatGaji)
+    public function edit($id)
     {
-        $user = Auth::user();
-        
-        // Jika bukan admin, pastikan hanya bisa edit data milik sendiri
-        if ($user->id_level != 1 && $riwayatGaji->id_user != $user->id_user) {
-            abort(403, 'Anda tidak memiliki akses untuk mengedit data ini.');
+        if (Auth::user()->id_level != 1) {
+            abort(403); // Hanya admin boleh edit
         }
-        
-        if ($user->id_level == 1) {
-            // Admin: Bisa pilih user mana saja
-            $users = MUser::all();
-        } else {
-            // Non-admin: Hanya bisa untuk diri sendiri
-            $users = MUser::where('id_user', $user->id_user)->get();
+
+        $riwayatGaji = RiwayatGajiModel::find($id);
+
+        if (!$riwayatGaji) {
+            return response()->json(['error' => 'Data tidak ditemukan'], 404);
         }
-        
+
+        $users = MUser::all(); // Untuk select user di form
         return view('riwayat_gaji.edit', compact('riwayatGaji', 'users'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, RiwayatGajiModel $riwayatGaji)
+    public function update(Request $request, $id)
     {
-        $user = Auth::user();
-        
-        // Jika bukan admin, pastikan hanya bisa update data milik sendiri
-        if ($user->id_level != 1 && $riwayatGaji->id_user != $user->id_user) {
-            return response()->json(['error' => 'Anda tidak memiliki akses untuk mengupdate data ini.'], 403);
+        if (Auth::user()->id_level != 1) {
+            abort(403); // Hanya admin boleh update
         }
-        
-        // Validation to match model's fillable fields
+
+        $riwayatGaji = RiwayatGajiModel::find($id);
+
+        if (!$riwayatGaji) {
+            return response()->json(['error' => 'Data tidak ditemukan'], 404);
+        }
+
+        // Validasi sesuai field fillable pada model
         $request->validate([
-            'id_user' => 'required|exists:m_user,id_user', // Perbaiki dari m_users ke m_user
-            'tanggal_berlaku' => 'required|date',
-            'gaji_pokok' => 'required|integer',
-            'keterangan' => 'nullable|string',
+            'id_user'          => 'required|exists:m_user,id_user',
+            'tanggal_berlaku'  => 'required|date',
+            'gaji_pokok'       => 'required|numeric',
+            'keterangan'       => 'nullable|string'
         ]);
 
-        // Jika bukan admin, pastikan tidak bisa mengubah id_user ke user lain
-        if ($user->id_level != 1 && $request->id_user != $user->id_user) {
-            return response()->json(['error' => 'Anda tidak dapat mengubah data untuk user lain.'], 403);
-        }
+        $riwayatGaji->update($request->only([
+            'id_user', 'tanggal_berlaku', 'gaji_pokok', 'keterangan'
+        ]));
 
-        $riwayatGaji->update($request->all());
-
-        return response()->json(['success' => 'Riwayat Gaji berhasil diperbarui.']);
+        // Response JSON untuk AJAX
+        return response()->json(['success' => 'Riwayat gaji berhasil diperbarui.']);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(RiwayatGajiModel $riwayatGaji)
+    public function destroy($id)
     {
-        $user = Auth::user();
-        
-        // Jika bukan admin, pastikan hanya bisa hapus data milik sendiri
-        if ($user->id_level != 1 && $riwayatGaji->id_user != $user->id_user) {
-            return response()->json(['error' => 'Anda tidak memiliki akses untuk menghapus data ini.'], 403);
+        if (Auth::user()->id_level != 1) {
+            abort(403); // Hanya admin boleh delete
         }
-        
+
+        $riwayatGaji = RiwayatGajiModel::find($id);
+
+        if (!$riwayatGaji) {
+            return response()->json(['error' => 'Data tidak ditemukan'], 404);
+        }
+
         $riwayatGaji->delete();
 
-        return response()->json(['success' => 'Riwayat Gaji berhasil dihapus.']);
+        // Response JSON untuk AJAX
+        return response()->json(['success' => 'Riwayat gaji berhasil dihapus.']);
     }
 }

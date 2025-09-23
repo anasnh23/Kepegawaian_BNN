@@ -75,4 +75,24 @@ class MasaKerja
         $months = $start->copy()->addYears($years)->diffInMonths($now);
         return [$years, $months];
     }
+
+    public static function label(int $userId): string
+{
+    [$years, $months] = self::yearsMonths($userId);
+
+    if ($years === 0 && $months === 0) {
+        return "Baru Bergabung";
+    }
+
+    $parts = [];
+    if ($years > 0) {
+        $parts[] = $years . ' th';
+    }
+    if ($months > 0) {
+        $parts[] = $months . ' bln';
+    }
+
+    return implode(' ', $parts);
+}
+
 }

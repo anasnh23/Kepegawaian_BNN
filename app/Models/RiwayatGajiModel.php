@@ -17,9 +17,7 @@ class RiwayatGajiModel extends Model
         'keterangan',
     ];
 
-    /**
-     * Relasi ke user (m_user)
-     */
+
     public function user()
     {
         return $this->belongsTo(MUser::class, 'id_user', 'id_user');

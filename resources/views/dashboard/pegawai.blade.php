@@ -7,15 +7,19 @@
   $hadir   = (int) data_get($stats, 'hadir', 0);
   $telat   = (int) data_get($stats, 'terlambat', 0);
   $absen   = (int) data_get($stats, 'tidak hadir', 0);
-  $dinas   = (int) data_get($stats, 'dinas_luar', 0); 
+  $dinas   = (int) data_get($stats, 'dinas_luar', 0);
   $cutiBln = (int) ($cutiStats ?? 0);
   $sisa    = (int) ($sisaCuti ?? 0);
   $label   = $labelPeriode ?? 'Bulan Ini';
   $riwayat = $riwayat ?? [];
   $nama    = data_get(auth()->user(), 'nama', 'Pegawai');
   $periode = $periode ?? 'bulan_ini';
-  $masaKerjaTahun = $masaKerjaTahun ?? 0;
-  $masaKerjaBulan = $masaKerjaBulan ?? 0;
+
+  // ==== Masa Kerja: dukung label dari helper (selaras Profil) ====
+  $mkTh   = (int) ($masaKerjaTahun ?? 0);
+  $mkBln  = (int) ($masaKerjaBulan ?? 0);
+  $mkText = trim(($mkTh ? $mkTh.' th ' : '').($mkBln ? $mkBln.' bln' : ''));
+  $masaKerjaLabel = ($masaKerjaLabel ?? '') !== '' ? $masaKerjaLabel : ($mkText !== '' ? $mkText : 'Baru Bergabung');
 @endphp
 
 <style>
@@ -125,12 +129,7 @@
           <div>
             <div class="kpi-title"><i class="fas fa-user-clock mr-2"></i>Masa Kerja</div>
             <div class="kpi-value">
-              @if($masaKerjaTahun == 0 && $masaKerjaBulan == 0)
-                <span style="font-size:1rem;">Baru Bergabung</span>
-              @else
-                {{ $masaKerjaTahun }}<sup style="font-size:14px;"> th</sup>
-                {{ $masaKerjaBulan }}<sup style="font-size:14px;"> bln</sup>
-              @endif
+              {{ $masaKerjaLabel }}
             </div>
           </div>
           <i class="fas fa-briefcase fa-2x text-warning"></i>
@@ -205,10 +204,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 (function(){
-  const DATA = { 
-    hadir: {{ $hadir }}, 
-    terlambat: {{ $telat }}, 
-    absen: {{ $absen }}, 
+  const DATA = {
+    hadir: {{ $hadir }},
+    terlambat: {{ $telat }},
+    absen: {{ $absen }},
     dinas: {{ $dinas }}
   };
   const C = { green:'#28a745', yellow:'#ffc107', red:'#dc3545', blue:'#007bff' };
@@ -217,10 +216,10 @@
     type:'bar',
     data:{
       labels:['Hadir','Terlambat','Tidak Hadir','Dinas Luar'],
-      datasets:[{ 
-        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas], 
-        backgroundColor:[C.green, C.yellow, C.red, C.blue], 
-        borderRadius:8 
+      datasets:[{
+        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas],
+        backgroundColor:[C.green, C.yellow, C.red, C.blue],
+        borderRadius:8
       }]
     },
     options:{ plugins:{legend:{display:false}}, responsive:true, scales:{ y:{beginAtZero:true} } }
@@ -230,9 +229,9 @@
     type:'doughnut',
     data:{
       labels:['Hadir','Terlambat','Tidak Hadir','Dinas Luar'],
-      datasets:[{ 
-        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas], 
-        backgroundColor:[C.green, C.yellow, C.red, C.blue] 
+      datasets:[{
+        data:[DATA.hadir, DATA.terlambat, DATA.absen, DATA.dinas],
+        backgroundColor:[C.green, C.yellow, C.red, C.blue]
       }]
     },
     options:{ plugins:{legend:{position:'bottom'}}, cutout:'60%', responsive:true }
