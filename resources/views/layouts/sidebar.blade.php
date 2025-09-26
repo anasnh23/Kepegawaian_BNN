@@ -64,7 +64,7 @@
         </a>
       </li>
 
-      {{-- Pengajuan KGP (baru) --}}
+      {{-- Pengajuan KGP (pegawai) --}}
       <li class="nav-item">
         <a href="{{ url('/kgp/pengajuan') }}" class="nav-link {{ $activeMenu == 'pengajuan-kgp' ? 'active' : '' }}">
           <i class="fas fa-money-check-alt nav-icon text-warning"></i>
@@ -74,7 +74,7 @@
 
       {{-- Submenu Manajemen Kepegawaian (Pegawai) --}}
       @php
-        $pegawaiSub = ['laporan-gaji','kgp_riwayat_gaji','riwayat-jabatan'];
+        $pegawaiSub = ['kgp_riwayat_gaji','riwayat-jabatan'];
       @endphp
       <li class="nav-item {{ in_array($activeMenu, $pegawaiSub) ? 'menu-open' : '' }}">
         <a href="#" class="nav-link {{ in_array($activeMenu, $pegawaiSub) ? 'active' : '' }}">
@@ -85,13 +85,7 @@
           </p>
         </a>
         <ul class="nav nav-treeview">
-          <li class="nav-item">
-            <a href="{{ url('/laporan-gaji') }}" class="nav-link {{ $activeMenu == 'laporan-gaji' ? 'active' : '' }}">
-              <i class="fas fa-file-invoice-dollar nav-icon"></i>
-              <p>Laporan Gaji</p>
-            </a>
-          </li>
-          {{-- Ganti Riwayat Gaji → KGP • Riwayat Gaji --}}
+          {{-- KGP • Riwayat Gaji (untuk pegawai tetap ada) --}}
           <li class="nav-item">
             <a href="{{ url('/kgp/riwayat') }}" class="nav-link {{ $activeMenu == 'kgp_riwayat_gaji' ? 'active' : '' }}">
               <i class="fas fa-money-bill nav-icon"></i>
@@ -130,99 +124,86 @@
       </li>
     @endif
 
-    {{-- ================= Menu Admin ================= --}}
-    @if(Auth::user()->id_level == 1)
-      @php
-        $adminMenus = [
-          'pegawai','pegawai-index','pegawai-tambah','pegawai-tetap','pegawai-outsourcing','pegawai-magang',
-          'presensi-admin','cuti','ref_jabatan','riwayat-jabatan','pangkat','golongan','kgp',
-          'kgp_riwayat_gaji','pendidikan','laporan-gaji'
-        ];
-      @endphp
+ {{-- ================= Menu Admin ================= --}}
+@if(Auth::user()->id_level == 1)
+  @php
+    // Disederhanakan: hapus golongan, KGB, pendidikan, laporan gaji
+    $adminMenus = [
+      'dashboard_info','pegawai','pegawai-index','pegawai-tambah','pegawai-tetap','pegawai-outsourcing','pegawai-magang',
+      'presensi-admin','cuti','ref_jabatan','riwayat-jabatan','pangkat'
+    ];
+  @endphp
 
-      <li class="nav-item {{ in_array($activeMenu, $adminMenus) ? 'menu-open' : '' }}">
-        <a href="#" class="nav-link {{ in_array($activeMenu, $adminMenus) ? 'active' : '' }}">
-          <i class="nav-icon fas fa-user-shield"></i>
-          <p>
-            Manajemen Kepegawaian
-            <i class="right fas fa-angle-left"></i>
-          </p>
+  <li class="nav-item {{ in_array($activeMenu, $adminMenus) ? 'menu-open' : '' }}">
+    <a href="#" class="nav-link {{ in_array($activeMenu, $adminMenus) ? 'active' : '' }}">
+      <i class="nav-icon fas fa-user-shield"></i>
+      <p>
+        Manajemen Kepegawaian
+        <i class="right fas fa-angle-left"></i>
+      </p>
+    </a>
+
+    <ul class="nav nav-treeview">
+
+      {{-- Informasi Dashboard (BARU - paling atas) --}}
+      <li class="nav-item">
+        <a href="{{ url('/dashboard-info') }}" class="nav-link {{ $activeMenu == 'dashboard_info' ? 'active' : '' }}">
+          <i class="fas fa-info-circle nav-icon text-primary"></i>
+          <p>Informasi Dashboard</p>
         </a>
-
-        <ul class="nav nav-treeview">
-{{-- Data Pegawai --}}
-<li class="nav-item">
-  <a href="{{ route('pegawai.index') }}" class="nav-link {{ $activeMenu=='pegawai' ? 'active' : '' }}">
-    <i class="fas fa-id-badge nav-icon"></i>
-    <p>Data Pegawai</p>
-  </a>
-</li>
-{{-- /Data Pegawai --}}
-
-          <li class="nav-item">
-            <a href="{{ url('/presensi-admin') }}" class="nav-link {{ $activeMenu == 'presensi-admin' ? 'active' : '' }}">
-              <i class="fas fa-fingerprint nav-icon"></i>
-              <p>Data Presensi</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/cutiadmin') }}" class="nav-link {{ $activeMenu == 'cuti' ? 'active' : '' }}">
-              <i class="fas fa-calendar-alt nav-icon text-danger"></i>
-              <p>Manajemen Cuti</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/ref_jabatan') }}" class="nav-link {{ $activeMenu == 'ref_jabatan' ? 'active' : '' }}">
-              <i class="fas fa-briefcase nav-icon text-info"></i>
-              <p>Data Jabatan</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/riwayat-jabatan') }}" class="nav-link {{ $activeMenu == 'riwayat-jabatan' ? 'active' : '' }}">
-              <i class="fas fa-history nav-icon"></i>
-              <p>Riwayat Jabatan</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/pangkat') }}" class="nav-link {{ $activeMenu == 'pangkat' ? 'active' : '' }}">
-              <i class="fas fa-signal nav-icon"></i>
-              <p>Pangkat</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/golongan') }}" class="nav-link {{ $activeMenu == 'golongan' ? 'active' : '' }}">
-              <i class="fas fa-layer-group nav-icon"></i>
-              <p>Golongan Pangkat</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/kgp') }}" class="nav-link {{ $activeMenu == 'kgp' ? 'active' : '' }}">
-              <i class="fas fa-chart-line nav-icon"></i>
-              <p>Kenaikan Gaji Berkala</p>
-            </a>
-          </li>
-          {{-- Ganti Riwayat Gaji → KGP • Riwayat Gaji --}}
-          <li class="nav-item">
-            <a href="{{ url('/kgp/riwayat') }}" class="nav-link {{ $activeMenu == 'kgp_riwayat_gaji' ? 'active' : '' }}">
-              <i class="fas fa-money-bill-wave nav-icon"></i>
-              <p>KGP • Riwayat Gaji</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/pendidikan') }}" class="nav-link {{ $activeMenu == 'pendidikan' ? 'active' : '' }}">
-              <i class="fas fa-graduation-cap nav-icon"></i>
-              <p>Pendidikan</p>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{ url('/laporan-gaji') }}" class="nav-link {{ $activeMenu == 'laporan-gaji' ? 'active' : '' }}">
-              <i class="fas fa-file-invoice-dollar nav-icon"></i>
-              <p>Laporan Gaji</p>
-            </a>
-          </li>
-        </ul>
       </li>
-    @endif
+
+      {{-- Data Pegawai --}}
+      <li class="nav-item">
+        <a href="{{ route('pegawai.index') }}" class="nav-link {{ $activeMenu=='pegawai' ? 'active' : '' }}">
+          <i class="fas fa-id-badge nav-icon"></i>
+          <p>Data Pegawai</p>
+        </a>
+      </li>
+
+      {{-- Data Presensi --}}
+      <li class="nav-item">
+        <a href="{{ url('/presensi-admin') }}" class="nav-link {{ $activeMenu == 'presensi-admin' ? 'active' : '' }}">
+          <i class="fas fa-fingerprint nav-icon"></i>
+          <p>Data Presensi</p>
+        </a>
+      </li>
+
+      {{-- Manajemen Cuti --}}
+      <li class="nav-item">
+        <a href="{{ url('/cutiadmin') }}" class="nav-link {{ $activeMenu == 'cuti' ? 'active' : '' }}">
+          <i class="fas fa-calendar-alt nav-icon text-danger"></i>
+          <p>Manajemen Cuti</p>
+        </a>
+      </li>
+
+      {{-- Data Jabatan --}}
+      <li class="nav-item">
+        <a href="{{ url('/ref_jabatan') }}" class="nav-link {{ $activeMenu == 'ref_jabatan' ? 'active' : '' }}">
+          <i class="fas fa-briefcase nav-icon text-info"></i>
+          <p>Data Jabatan</p>
+        </a>
+      </li>
+
+      {{-- Riwayat Jabatan --}}
+      <li class="nav-item">
+        <a href="{{ url('/riwayat-jabatan') }}" class="nav-link {{ $activeMenu == 'riwayat-jabatan' ? 'active' : '' }}">
+          <i class="fas fa-history nav-icon"></i>
+          <p>Riwayat Jabatan</p>
+        </a>
+      </li>
+
+      {{-- Pangkat --}}
+      <li class="nav-item">
+        <a href="{{ url('/pangkat') }}" class="nav-link {{ $activeMenu == 'pangkat' ? 'active' : '' }}">
+          <i class="fas fa-signal nav-icon"></i>
+          <p>Pangkat</p>
+        </a>
+      </li>
+
+    </ul>
+  </li>
+@endif
 
   </ul>
 </nav>

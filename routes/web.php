@@ -22,9 +22,12 @@ use App\Http\Controllers\RefJabatanController;
 use App\Http\Controllers\RiwayatGajiController;
 
 // === KGP ===
-use App\Http\Controllers\PengajuanKgpController;      // Pegawai ajukan KGP
-use App\Http\Controllers\ApprovalKgpController;       // Pimpinan approve/reject
-use App\Http\Controllers\KgpRiwayatGajiController;    // Halaman Riwayat Gaji KGP
+use App\Http\Controllers\PengajuanKgpController;
+use App\Http\Controllers\ApprovalKgpController;
+use App\Http\Controllers\KgpRiwayatGajiController;
+
+// === Dashboard Info (Admin kelola pengumuman di dashboard pegawai) ===
+use App\Http\Controllers\DashboardInfoController;
 
 // Root → dashboard / login
 Route::get('/', function () {
@@ -96,7 +99,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/approval-dokumen/{id}/edit',          [PimpinanCutiController::class, 'edit'])->name('approval.edit');
     Route::put('/approval-dokumen/{id}/update-status', [PimpinanCutiController::class, 'updateStatus'])->name('approval.updateStatus');
 
-    // 🔹 Tambahan endpoint AJAX (tanpa {id}) untuk tombol Approve/Tolak via fetch/$.post()
+    // 🔹 Endpoint AJAX tanpa {id}
     Route::post('/approval-dokumen/update-status', [PimpinanCutiController::class, 'updateStatusAjax'])
         ->name('approval.dokumen.updateStatusAjax');
 
@@ -105,9 +108,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/',              [NotifikasiController::class, 'semua'])->name('notifikasi.semua');
         Route::get('/{id}/baca',     [NotifikasiController::class, 'baca'])->name('notifikasi.baca.id');
         Route::post('/tandai-semua', [NotifikasiController::class, 'tandaiSemua'])->name('notifikasi.tandaiSemua');
-
-        // Opsional: fallback GET supaya tidak error kalau ada request GET
-        Route::get('/tandai-semua', [NotifikasiController::class, 'tandaiSemua']);
+        Route::get('/tandai-semua',  [NotifikasiController::class, 'tandaiSemua']); // fallback GET
     });
 
     /* ===================== MASTER & RIWAYAT GAJI ===================== */
@@ -116,17 +117,28 @@ Route::middleware(['auth'])->group(function () {
 
     /* ===================== KGP ===================== */
     // Pegawai
-    Route::get('/kgp/pengajuan',        [PengajuanKgpController::class, 'index'])->name('kgp.pengajuan');
-    Route::post('/kgp/store',           [PengajuanKgpController::class, 'store'])->name('kgp.store');
-    Route::get('/kgp/riwayat-pengajuan',[PengajuanKgpController::class, 'riwayat'])->name('kgp.riwayat.pengajuan');
+    Route::get('/kgp/pengajuan',         [PengajuanKgpController::class, 'index'])->name('kgp.pengajuan');
+    Route::post('/kgp/store',            [PengajuanKgpController::class, 'store'])->name('kgp.store');
+    Route::get('/kgp/riwayat-pengajuan', [PengajuanKgpController::class, 'riwayat'])->name('kgp.riwayat.pengajuan');
 
     // Riwayat Gaji KGP
-    Route::get('/kgp/riwayat',          [KgpRiwayatGajiController::class, 'index'])->name('kgp.riwayat');
-    Route::get('/kgp/riwayat/{id_user}',[KgpRiwayatGajiController::class, 'index'])->name('kgp.riwayat.user');
+    Route::get('/kgp/riwayat',           [KgpRiwayatGajiController::class, 'index'])->name('kgp.riwayat');
+    Route::get('/kgp/riwayat/{id_user}', [KgpRiwayatGajiController::class, 'index'])->name('kgp.riwayat.user');
     Route::post('/kgp/approve/{id_user}',[KgpRiwayatGajiController::class, 'approveNextStage'])->name('kgp.approve');
 
     // Pimpinan
     Route::get('/approval-kgp',               [ApprovalKgpController::class, 'index'])->name('approval.kgp');
     Route::post('/approval-kgp/approve/{id}', [ApprovalKgpController::class, 'approve'])->name('approval.kgp.approve');
     Route::post('/approval-kgp/reject/{id}',  [ApprovalKgpController::class, 'reject'])->name('approval.kgp.reject');
+
+// ===================== DASHBOARD INFO (ADMIN ONLY UI) =====================
+Route::prefix('dashboard-info')->group(function () {
+    Route::get('/',          [DashboardInfoController::class, 'index'])->name('dashboard-info.index');
+    Route::get('/create',    [DashboardInfoController::class, 'create'])->name('dashboard-info.create');
+    Route::post('/',         [DashboardInfoController::class, 'store'])->name('dashboard-info.store');
+    Route::get('/{id}/edit', [DashboardInfoController::class, 'edit'])->name('dashboard-info.edit');
+    Route::put('/{id}',      [DashboardInfoController::class, 'update'])->name('dashboard-info.update');
+    Route::delete('/{id}',   [DashboardInfoController::class, 'destroy'])->name('dashboard-info.destroy');
+});
+
 });
