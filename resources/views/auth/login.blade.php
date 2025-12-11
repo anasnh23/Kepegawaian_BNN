@@ -212,7 +212,6 @@
       <p>Untuk mendukung tercapainya instansi yang berakar kuat dan menjulang tinggi 
         melalui tata kelola yang transparan, pelayanan pegawai yang responsif, serta 
         pemanfaatan teknologi informasi yang terintegrasi dan berkelanjutan.</p>
-      <p class="type"><br>Dibuat dengan ❤️ dan ☕ oleh Humas BNN Kota Kediri</p>
     </section>
 
     <!-- RIGHT -->
