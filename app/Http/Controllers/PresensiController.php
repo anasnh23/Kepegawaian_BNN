@@ -14,28 +14,59 @@ use Carbon\CarbonInterval;
 class PresensiController extends Controller
 {
     /** Halaman presensi kantor */
-    public function index()
-    {
-        $tz    = 'Asia/Jakarta';
-        $today = Carbon::now($tz)->toDateString();
+public function index()
+{
+    $tz    = 'Asia/Jakarta';
+    $today = Carbon::now($tz)->toDateString();
+    $userId = $this->authUserId();
 
-        $todayPresensi = PresensiModel::where('id_user', $this->authUserId())
-            ->whereDate('tanggal', $today)
-            ->first();
+    // Presensi hari ini
+    $todayPresensi = PresensiModel::where('id_user', $userId)
+        ->whereDate('tanggal', $today)
+        ->first();
 
-        $recent = PresensiModel::where('id_user', $this->authUserId())
-            ->orderByDesc('tanggal')
-            ->limit(7)
-            ->get();
-
-        $config = [
-            'start' => env('ABSEN_START', '08:00:00'),
-            'tol'   => env('ABSEN_TOL', '00:15:00'),
-            'end'   => env('ABSEN_END', '16:00:00'),
-        ];
-
-        return view('presensi.index', compact('todayPresensi', 'recent', 'config', 'today'));
+    // Bangun list 7 hari terakhir (hari ini mundur 6 hari)
+    $dates = [];
+    for ($i = 0; $i < 7; $i++) {
+        $dates[] = Carbon::now($tz)->subDays($i)->toDateString();
     }
+
+    // Ambil presensi dalam rentang 7 hari itu
+    $minDate = min($dates);
+    $maxDate = max($dates);
+
+    $presensiMap = PresensiModel::where('id_user', $userId)
+        ->whereBetween('tanggal', [$minDate, $maxDate])
+        ->orderByDesc('tanggal')
+        ->get()
+        ->keyBy('tanggal');
+
+    // Susun ulang jadi tepat 7 baris (kalau tidak ada, default tidak hadir)
+    $recent = collect();
+    foreach ($dates as $d) {
+        if ($presensiMap->has($d)) {
+            $recent->push($presensiMap->get($d));
+        } else {
+            // objek "dummy" untuk tanggal tanpa presensi
+            $recent->push((object)[
+                'tanggal'    => $d,
+                'jam_masuk'  => null,
+                'jam_pulang' => null,
+                'status'     => 'tidak_hadir',
+            ]);
+        }
+    }
+
+    // config jam
+    $config = [
+        'start' => env('ABSEN_START', '08:00:00'),
+        'tol'   => env('ABSEN_TOL', '00:15:00'),
+        'end'   => env('ABSEN_END', '16:00:00'),
+    ];
+
+    return view('presensi.index', compact('todayPresensi', 'recent', 'config', 'today'));
+}
+
 
     /** Simpan presensi kantor (masuk/pulang) */
     public function store(Request $request)

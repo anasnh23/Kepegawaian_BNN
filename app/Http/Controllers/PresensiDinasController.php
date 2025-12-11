@@ -18,7 +18,7 @@ class PresensiDinasController extends Controller
     /** Tampilkan halaman presensi dinas luar */
     public function index()
     {
-        $today = Carbon::now($this->tz)->toDateString();
+        $today  = Carbon::now($this->tz)->toDateString();
         $userId = $this->authUserId();
 
         $todayPresensi = PresensiModel::where('id_user', $userId)
@@ -44,10 +44,10 @@ class PresensiDinasController extends Controller
             'longitude'  => 'required|numeric',
         ]);
 
-        $now     = Carbon::now($this->tz);
-        $today   = $now->toDateString();
-        $jamNow  = $now->format('H:i:s');
-        $userId  = $this->authUserId();
+        $now    = Carbon::now($this->tz);
+        $today  = $now->toDateString();
+        $jamNow = $now->format('H:i:s');
+        $userId = $this->authUserId();
 
         $lat = (float) $request->latitude;
         $lng = (float) $request->longitude;
@@ -68,8 +68,11 @@ class PresensiDinasController extends Controller
         // 📷 Validasi & decode image base64 (jpeg/png/webp saja)
         [$binary, $ext] = $this->decodeBase64ImageOrFail($request->image_data);
 
-        // 📍 Ambil alamat (reverse geocode)
-        $alamat = $this->reverseGeocode($lat, $lng) ?? sprintf('%.6f, %.6f', $lat, $lng);
+        // 📍 Ambil alamat (reverse geocode) – TANPA fallback koordinat
+        $alamat = $this->reverseGeocode($lat, $lng);
+        if (!$alamat) {
+            $alamat = 'Lokasi tidak diketahui'; // bisa diganti misalnya: 'Lokasi belum terdeteksi'
+        }
 
         // 💾 Simpan foto ke storage publik (folder rapi per Y/m/d/user)
         $fileName = sprintf('presensi_dinas_%s_%s.%s', $userId, $now->format('Ymd_His'), $ext);
@@ -94,8 +97,7 @@ class PresensiDinasController extends Controller
                     $presensi->tanggal = $today;
                     $presensi->status  = 'dinas_luar';
                 } else {
-                    // Jika baris ada tapi status bukan dinas_luar (harusnya sudah ditolak di atas),
-                    // tetap amankan di sini juga:
+                    // Safety tambahan
                     if ($presensi->status !== 'dinas_luar') {
                         return response()->json([
                             'code'    => 422,
@@ -137,7 +139,12 @@ class PresensiDinasController extends Controller
             $presensi->lat_pulang  = $lat;
             $presensi->long_pulang = $lng;
             $presensi->foto_pulang = $path;
-            if (!$presensi->lokasi) $presensi->lokasi = $alamat;
+
+            // Kalau sebelumnya belum punya lokasi, isi sekarang
+            if (!$presensi->lokasi) {
+                $presensi->lokasi = $alamat;
+            }
+
             $presensi->save();
 
             return response()->json([
@@ -168,6 +175,7 @@ class PresensiDinasController extends Controller
                 'image_data' => 'Format gambar harus JPEG/PNG/WEBP (base64 data URL).'
             ]);
         }
+
         $ext = strtolower($m[1] === 'jpg' ? 'jpeg' : $m[1]);
 
         $base64 = substr($dataUrl, strpos($dataUrl, ',') + 1);
@@ -209,8 +217,9 @@ class PresensiDinasController extends Controller
                 return $resp->json('display_name');
             }
         } catch (\Throwable $e) {
-            // log jika perlu
+            // kalau mau, tulis ke log: \Log::error($e->getMessage());
         }
+
         return null;
     }
 }

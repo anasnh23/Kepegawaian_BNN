@@ -177,22 +177,24 @@
             <div class="hint">Jika dinonaktifkan, silakan isi periode berlaku di bawah.</div>
           </div>
 
+          {{-- Range tanggal (sembunyikan jika selamanya) --}}
           <div id="rangeTanggal" class="row g-3 mx-0 px-0 {{ old('selamanya') ? 'd-none':'' }}">
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label">Mulai</label>
               <input type="date" name="mulai" value="{{ old('mulai') }}" class="form-control rounded-3" id="mulaiField">
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label">Selesai</label>
               <input type="date" name="selesai" value="{{ old('selesai') }}" class="form-control rounded-3" id="selesaiField">
             </div>
+          </div>
 
-            <div class="col-md-4">
-              <label class="form-label">Urutan</label>
-              <input type="number" name="urutan" value="{{ old('urutan',0) }}" class="form-control rounded-3" min="0">
-              <div class="hint mt-1">Angka kecil tampil lebih atas.</div>
-            </div>
+          {{-- URUTAN: DIPISAH dari blok tanggal agar selalu terkirim --}}
+          <div class="col-md-4 mt-2">
+            <label class="form-label req">Urutan</label>
+            <input type="number" name="urutan" id="urutan" value="{{ old('urutan',0) }}" class="form-control rounded-3" min="0" required>
+            <div class="hint mt-1">Angka kecil tampil lebih atas.</div>
           </div>
 
           <div class="col-md-3 d-flex align-items-end">
@@ -227,10 +229,10 @@
     const upd = () => counter.textContent = `${judul.value.length} / 150`;
     judul.addEventListener('input', upd); upd();
 
+    // Editor actions
     const editor = document.getElementById('editor');
     function exec(cmd, val=null){ document.execCommand(cmd, false, val); editor.focus(); }
 
-    // Tombol dasar
     document.querySelectorAll('.tb-btn[data-cmd]').forEach(btn=>{
       btn.addEventListener('click', ()=> exec(btn.getAttribute('data-cmd')));
     });
@@ -285,23 +287,28 @@
       const on = selamanya.checked;
       if(on){
         rangeTanggal.classList.add('d-none');
-        mulaiEl.value = ''; selesaiEl.value = '';
-        mulaiEl.disabled = true; selesaiEl.disabled = true;
+        if(mulaiEl){ mulaiEl.value = ''; mulaiEl.disabled = true; }
+        if(selesaiEl){ selesaiEl.value = ''; selesaiEl.disabled = true; }
       }else{
         rangeTanggal.classList.remove('d-none');
-        mulaiEl.disabled = false; selesaiEl.disabled = false;
+        if(mulaiEl){ mulaiEl.disabled = false; }
+        if(selesaiEl){ selesaiEl.disabled = false; }
       }
     }
     selamanya.addEventListener('change', applySelamanya);
     applySelamanya();
 
-    // Submit: kirim HTML editor ke input hidden "konten" dan validasi tanggal
+    // Submit: kirim HTML editor + validasi tanggal + pastikan urutan ada
     document.getElementById('formCreateInfo').addEventListener('submit', function(e){
       if(!selamanya.checked && mulaiEl.value && selesaiEl.value && selesaiEl.value < mulaiEl.value){
         e.preventDefault();
         alert('Tanggal selesai tidak boleh sebelum tanggal mulai.');
         return;
       }
+      // pastikan urutan tidak kosong
+      const urutanEl = document.getElementById('urutan');
+      if(!urutanEl.value) urutanEl.value = '0';
+
       document.getElementById('konten').value = editor.innerHTML;
     });
   </script>
